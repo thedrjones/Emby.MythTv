@@ -1,5 +1,5 @@
 NUGET
   remote: https://www.nuget.org/api/v2
-    MediaBrowser.Common (3.0.691) - restriction: >= net46
-    MediaBrowser.Server.Core (3.0.691) - restriction: >= net46
-      MediaBrowser.Common (>= 3.0.691)
+    MediaBrowser.Common (3.3.10) - restriction: >= net46
+    MediaBrowser.Server.Core (3.3.10) - restriction: >= net46
+      MediaBrowser.Common (>= 3.3.10)

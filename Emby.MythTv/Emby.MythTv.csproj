@@ -119,12 +119,12 @@
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1')">
       <ItemGroup>
         <Reference Include="MediaBrowser.Common">
-          <HintPath>..\packages\MediaBrowser.Common\lib\portable-net45+win8+wpa81\MediaBrowser.Common.dll</HintPath>
+          <HintPath>..\packages\MediaBrowser.Common\lib\netstandard1.3\MediaBrowser.Common.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
         <Reference Include="MediaBrowser.Model">
-          <HintPath>..\packages\MediaBrowser.Common\lib\portable-net45+win8+wpa81\MediaBrowser.Model.dll</HintPath>
+          <HintPath>..\packages\MediaBrowser.Common\lib\netstandard1.3\MediaBrowser.Model.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -135,7 +135,7 @@
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1')">
       <ItemGroup>
         <Reference Include="MediaBrowser.Controller">
-          <HintPath>..\packages\MediaBrowser.Server.Core\lib\net45\MediaBrowser.Controller.dll</HintPath>
+          <HintPath>..\packages\MediaBrowser.Server.Core\lib\netstandard1.3\MediaBrowser.Controller.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
