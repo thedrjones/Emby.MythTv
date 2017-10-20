@@ -653,6 +653,7 @@ namespace Emby.MythTv
         {
             // get all images
             var progIds = programs.Select(p => p.ShowId).ToList();
+            _logger.Info($"[MythTV] Fetching SchedulesDirect images");
             var images = await GetImageForPrograms(progIds, cancellationToken).ConfigureAwait(false);
 
             foreach (ProgramInfo program in programs)
