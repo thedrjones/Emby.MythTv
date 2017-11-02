@@ -69,6 +69,7 @@
     <Compile Include="Model\Recording.cs" />
     <Compile Include="Model\RecRule.cs" />
     <Compile Include="Model\RecRuleList.cs" />
+    <Compile Include="Model\ScheduleDirect.cs" />
     <Compile Include="Model\Version.cs" />
     <Compile Include="Model\VideoSource.cs" />
     <Compile Include="Model\VideoSourceList.cs" />
