@@ -50,6 +50,8 @@
     <Compile Include="Helpers\AsyncLock.cs" />
     <Compile Include="Helpers\AsyncSemaphore.cs" />
     <Compile Include="Helpers\GeneralHelpers.cs" />
+    <Compile Include="Images\IImageGrabber.cs" />
+    <Compile Include="Images\SchedulesDirect.cs" />
     <Compile Include="LiveTvService.cs" />
     <Compile Include="Model\Artwork.cs" />
     <Compile Include="Model\ArtworkInfo.cs" />
