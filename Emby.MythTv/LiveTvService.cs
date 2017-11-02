@@ -82,7 +82,9 @@ namespace Emby.MythTv
                 _logger.Info($"[MythTV] MythProtocol connection opened, protocol version {_liveTV.ProtoVersion}");
             }
 
-            _imageGrabber = new SchedulesDirectImages(_httpClient, _jsonSerializer, _logger);
+            if (config.UseSchedulesDirectImages) {
+                _imageGrabber = new SchedulesDirectImages(_httpClient, _jsonSerializer, _logger);
+            }
         }
 
         private HttpRequestOptions PostOptions(CancellationToken cancellationToken, string requestContent, string uriPathQuery, params object[] plist) 
@@ -624,7 +626,12 @@ namespace Emby.MythTv
                 programs = _guide.GetPrograms(channelId, _logger).ToList();
             }
 
-            return await _imageGrabber.AddImages(programs, cancellationToken);
+            if (_imageGrabber != null)
+            {
+                programs = await _imageGrabber.AddImages(programs, cancellationToken);
+            }
+
+            return programs;
         }
 
         public Task RecordLiveStream(string id, CancellationToken cancellationToken)

@@ -43,6 +43,14 @@
                             <input type="checkbox" id="chkLoadChannelIcons" data-mini="true" />
                         </li>
                         <li>
+                            <label for="chkUseSchedulesDirectImages">Grab images from SchedulesDirect</label>
+                            <input type="checkbox" id="chkUseSchedulesDirectImages" data-mini="true" />
+                            <div class="fieldDescription">
+                                Will only work if MythTV uses Schedules Direct as the data source and so has correct program IDs.
+                            </div>
+                        </li>
+
+                        <li>
                             <button type="submit" data-theme="b">Save</button>
                             <button type="button" onclick="history.back();">Cancel</button>
                         </li>
@@ -71,6 +79,7 @@
                     $('#txtUncPath', page).val(config.UncPath || "");
                     $('#txtRecExclude', page).val(config.RecGroupExclude || "");
                     $('#chkLoadChannelIcons', page).checked(config.LoadChannelIcons || false).checkboxradio("refresh");
+                    $('#chkUseSchedulesDirectImages', page).checked(config.UseSchedulesDirectImages || false).checkboxradio("refresh");
 
                     Dashboard.hideLoadingMsg();
                 });
@@ -88,6 +97,7 @@
                     config.UncPath = $('#txtUncPath', form).val();
                     config.RecGroupExclude = $('#txtRecExclude', form).val();
                     config.LoadChannelIcons = $('#chkLoadChannelIcons', form).checked();
+                    config.UseSchedulesDirectImages = $('#chkUseSchedulesDirectImages', form).checked();
 
                     ApiClient.updatePluginConfiguration(MythTvConfigurationPage.pluginUniqueId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                 });
