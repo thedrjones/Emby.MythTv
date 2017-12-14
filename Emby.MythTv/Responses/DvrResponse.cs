@@ -338,16 +338,19 @@ namespace Emby.MythTv.Responses
             
             recInfo.Genres.AddRange(item.Category.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries));
 
+            recInfo.HasImage = false;
             if (item.Artwork.ArtworkInfos.Count > 0)
             {
-                var url = item.Artwork.ArtworkInfos.Where(i => i.Type.Equals("coverart")).First().URL;
-                recInfo.ImageUrl = string.Format("{0}{1}",
-                                                 Plugin.Instance.Configuration.WebServiceUrl,
-                                                 url);
-                recInfo.HasImage = true;
+                var art = item.Artwork.ArtworkInfos.Where(i => i.Type.Equals("coverart"));
+                if (art.Any())
+                {
+                    var url = item.Artwork.ArtworkInfos.Where(i => i.Type.Equals("coverart")).First().URL;
+                    recInfo.ImageUrl = string.Format("{0}{1}",
+                                                     Plugin.Instance.Configuration.WebServiceUrl,
+                                                     url);
+                    recInfo.HasImage = true;
+                }
             }
-            else
-                recInfo.HasImage = false;
 
             return recInfo;
 
