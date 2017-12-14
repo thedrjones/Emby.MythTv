@@ -1,111 +1,100 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
     <title>MythTV</title>
-</head>
-<body>
-    <div data-role="page" class="page type-interior pluginConfigurationPage mythTvConfigurationPage">
+  </head>
+  <body>
+    <div data-role="page" class="page type-interior pluginConfigurationPage mythTvConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-textarea">
 
-        <div data-role="content">
-            <div class="content-primary">
-                <form class="mythTvConfigurationForm">
+      <div data-role="content">
+        <div class="content-primary" style="max-width:700px;">
 
-                    <ul class="ulForm" data-role="listview">
-                        <li>
-                            <label for="txtHost">
-                                MythTv host:
-                            </label>
-                            <input type="text" id="txtHost" name="txtHost" />
-                            <div class="fieldDescription">
-                                MythTv backend host IP.
-                            </div>
-                        </li>
-                        <li>
-                            <label for="txtUncPath">
-                                Recordings UNC:
-                            </label>
-                            <textarea id="txtUncPath" name="txtUncPath" rows="4" cols="50" ></textarea>
-                            <div class="fieldDescription">
-                                MythTv Recordings Path. One per line. Must be accessible by Emby server.
-                            </div>
-                        </li>
-                        <li>
-                            <label for="txtRecExclude">
-                                Exclude Recordings Categories:
-                            </label>
-                            <input id="txtRecExclude" name="txtRecExclude" />
-                            <div class="fieldDescription">
-                                Exclude recordings of these types, comma separated.
-                            </div>
-                        </li>
-                        <li>
-                            <label for="chkLoadChannelIcons">MythTV has channel icons</label>
-                            <input type="checkbox" id="chkLoadChannelIcons" data-mini="true" />
-                        </li>
-                        <li>
-                            <label for="chkUseSchedulesDirectImages">Grab images from SchedulesDirect</label>
-                            <input type="checkbox" id="chkUseSchedulesDirectImages" data-mini="true" />
-                            <div class="fieldDescription">
-                                Will only work if MythTV uses Schedules Direct as the data source and so has correct program IDs.
-                            </div>
-                        </li>
+          <div class="inputContainer">
+            <input is="emby-input" id="txtHost" label="MythTV host:" autocomplete="off" />
+            <div class="fieldDescription">MythTV backend host IP.</div>
+          </div>
 
-                        <li>
-                            <button type="submit" data-theme="b">Save</button>
-                            <button type="button" onclick="history.back();">Cancel</button>
-                        </li>
-                    </ul>
+          <div class="inputContainer">
+            <textarea is="emby-textarea" id="txtUncPath" label="Recording UNC:" class="textarea-mono"></textarea>
+            <div class="fieldDescription">MythTV Recordings Path. One per line. Must be accessible by Emby server.</div>
+          </div>
 
-                </form>
-            </div>
+          <div class="inputContainer">
+            <input is="emby-input" id="txtRecExclude" label="Exclude recordings categories:" autocomplete="off" />
+            <div class="fieldDescription">Exclude recordings of these types, comma separated.</div>
+          </div>
+
+          <div class="checkboxContainer checkboxContainer-withDescription">
+            <label>
+              <input type="checkbox" is="emby-checkbox" id="chkLoadChannelIcons" />
+              <span>MythTV has channel icons</span>
+            </label>
+            <div class="fieldDescription checkboxFieldDescription">Import MythTV channel icons into Emby</div>
+          </div>
+
+          <div class="checkboxContainer checkboxContainer-withDescription">
+            <label>
+              <input type="checkbox" is="emby-checkbox" id="chkUseSchedulesDirectImages" />
+              <span>Grab images from SchedulesDirect</span>
+            </label>
+            <div class="fieldDescription checkboxFieldDescription">Will only work if MythTV uses Schedules Direct as the data source and so has correct program IDs.</div>
+          </div>
+
+          <button is="emby-button" type="button" onclick="MythTvConfigurationPage.submit();" class="raised button-submit block"><span>Save</span></button>
+
         </div>
+      </div>
 
 
-        <script type="text/javascript">
+      <script type="text/javascript">
+        
+        var MythTvConfigurationPage = {
+          pluginUniqueId: "3a64de78-51be-495e-89de-0bb46f8c28f4",
 
-            var MythTvConfigurationPage = {
-                pluginUniqueId: "3a64de78-51be-495e-89de-0bb46f8c28f4"
-            };
-
-            $('.mythTvConfigurationPage').on('pageshow', function (event) {
-
-                Dashboard.showLoadingMsg();
-
-                var page = this;
-
-                ApiClient.getPluginConfiguration(MythTvConfigurationPage.pluginUniqueId).then(function (config) {
-
-                    $('#txtHost', page).val(config.Host || "");
-                    $('#txtUncPath', page).val(config.UncPath || "");
-                    $('#txtRecExclude', page).val(config.RecGroupExclude || "");
-                    $('#chkLoadChannelIcons', page).checked(config.LoadChannelIcons || false).checkboxradio("refresh");
-                    $('#chkUseSchedulesDirectImages', page).checked(config.UseSchedulesDirectImages || false).checkboxradio("refresh");
-
-                    Dashboard.hideLoadingMsg();
-                });
+          load: function() {
+        
+            Dashboard.showLoadingMsg();
+            
+            var page = $($.mobile.activePage)[0];
+            
+            ApiClient.getPluginConfiguration(MythTvConfigurationPage.pluginUniqueId).then(function (config) {
+              
+              $('#txtHost', page).val(config.Host || "");
+              $('#txtUncPath', page).val(config.UncPath || "");
+              $('#txtRecExclude', page).val(config.RecGroupExclude || "");
+              $('#chkLoadChannelIcons', page).checked(config.LoadChannelIcons || false).checkboxradio("refresh");
+              $('#chkUseSchedulesDirectImages', page).checked(config.UseSchedulesDirectImages || false).checkboxradio("refresh");
+              
+              Dashboard.hideLoadingMsg();
             });
+          },
 
-            $('.mythTvConfigurationForm').on('submit', function (e) {
+          submit: function(done) {
+            Dashboard.showLoadingMsg();
+            
+            var page = $($.mobile.activePage)[0];
+            
+            ApiClient.getPluginConfiguration(MythTvConfigurationPage.pluginUniqueId).then(function (config) {
 
-                Dashboard.showLoadingMsg();
+              config.Host = $('#txtHost', page).val();
+              config.UncPath = $('#txtUncPath', page).val();
+              config.RecGroupExclude = $('#txtRecExclude', page).val();
+              config.LoadChannelIcons = $('#chkLoadChannelIcons', page).checked();
+              config.UseSchedulesDirectImages = $('#chkUseSchedulesDirectImages', page).checked();
 
-                var form = this;
-
-                ApiClient.getPluginConfiguration(MythTvConfigurationPage.pluginUniqueId).then(function (config) {
-
-                    config.Host = $('#txtHost', form).val();
-                    config.UncPath = $('#txtUncPath', form).val();
-                    config.RecGroupExclude = $('#txtRecExclude', form).val();
-                    config.LoadChannelIcons = $('#chkLoadChannelIcons', form).checked();
-                    config.UseSchedulesDirectImages = $('#chkUseSchedulesDirectImages', form).checked();
-
-                    ApiClient.updatePluginConfiguration(MythTvConfigurationPage.pluginUniqueId, config).then(Dashboard.processPluginConfigurationUpdateResult);
-                });
-
-                // Disable default form submission
-                return false;
+              ApiClient.updatePluginConfiguration(MythTvConfigurationPage.pluginUniqueId, config).then(function () {
+                Dashboard.hideLoadingMsg();
+                Dashboard.alert("Settings Saved");
+                if (done) done();
+              });
             });
-        </script>
+          }
+        };
+
+        $('.mythTvConfigurationPage').on('pageshow', function (event) {
+          MythTvConfigurationPage.load()
+        });
+      </script>
     </div>
-</body>
+  </body>
 </html>
