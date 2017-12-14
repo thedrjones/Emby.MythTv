@@ -25,6 +25,7 @@ namespace Emby.MythTv.Configuration
         public Boolean EnableDebugLogging { get; set; }
         public int LiveTvWaits { get; set; }
         public bool LoadChannelIcons { get; set; }
+        public bool UseSchedulesDirectImages { get; set; }
         public string RecGroupExclude { get; set; }
 
         public PluginConfiguration()
@@ -37,6 +38,7 @@ namespace Emby.MythTv.Configuration
             EnableDebugLogging = false;
             LiveTvWaits = 10;
             LoadChannelIcons = false;
+            UseSchedulesDirectImages = false;
             RecGroupExclude = "Deleted,LiveTV";
         }
     }

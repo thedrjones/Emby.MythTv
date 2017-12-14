@@ -10,6 +10,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.LiveTv;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.MediaInfo;
+using MediaBrowser.Model.Net;
 using MediaBrowser.Model.Serialization;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,7 @@ namespace Emby.MythTv
         private readonly IJsonSerializer _jsonSerializer;
         private readonly ILogger _logger;
         private LiveTVPlayback _liveTV;
+        private IImageGrabber _imageGrabber;
 
         // cache the listings data
         private readonly AsyncLock _guideLock = new AsyncLock();
@@ -39,7 +41,6 @@ namespace Emby.MythTv
         private readonly AsyncLock _channelLock = new AsyncLock();
         private Dictionary<string, string> channelNums;
 
-        
         public LiveTvService(IHttpClient httpClient, IJsonSerializer jsonSerializer, ILogger logger)
         {
             _httpClient = httpClient;
@@ -79,6 +80,10 @@ namespace Emby.MythTv
                 _liveTV = new LiveTVPlayback(config.Host, 6543);
                 await _liveTV.Open();
                 _logger.Info($"[MythTV] MythProtocol connection opened, protocol version {_liveTV.ProtoVersion}");
+            }
+
+            if (config.UseSchedulesDirectImages) {
+                _imageGrabber = new SchedulesDirectImages(_httpClient, _jsonSerializer, _logger);
             }
         }
 
@@ -614,11 +619,19 @@ namespace Emby.MythTv
             _logger.Info("[MythTV] Start GetPrograms Async, retrieve programs for: {0}", channelId);
 
             await CacheGuideResponse(startDateUtc, endDateUtc, cancellationToken);
+            IEnumerable<ProgramInfo> programs;
             
             using (var releaser = await _guideLock.LockAsync())
             {
-                return _guide.GetPrograms(channelId, _logger).ToList();
+                programs = _guide.GetPrograms(channelId, _logger).ToList();
             }
+
+            if (_imageGrabber != null)
+            {
+                programs = await _imageGrabber.AddImages(programs, cancellationToken);
+            }
+
+            return programs;
         }
 
         public Task RecordLiveStream(string id, CancellationToken cancellationToken)
@@ -688,6 +701,7 @@ namespace Emby.MythTv
             // Leave as is. This is handled by supplying image url to RecordingInfo
             throw new NotImplementedException();
         }
+
     }
 
 }

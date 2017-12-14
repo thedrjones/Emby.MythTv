@@ -26,7 +26,7 @@
                             </label>
                             <textarea id="txtUncPath" name="txtUncPath" rows="4" cols="50" ></textarea>
                             <div class="fieldDescription">
-                                MythTv Recordings UNC Path (format --> \\{hostname}\recordings). One per line.
+                                MythTv Recordings Path. One per line. Must be accessible by Emby server.
                             </div>
                         </li>
                         <li>
@@ -38,32 +38,18 @@
                                 Exclude recordings of these types, comma separated.
                             </div>
                         </li>
-                        <!--<li>
-                            <label for="txtUserName">
-                                User Name:
-                            </label>
-                            <input type="text" id="txtUserName" name="txtUserName" />
-                            <div class="fieldDescription">
-                                MythTv backend user name.
-                            </div>
-                        </li>
-                        <li>
-                            <label for="txtPassword">
-                                Password:
-                            </label>
-                            <input type="text" id="txtPassword" name="txtPassword" />
-                            <div class="fieldDescription">
-                                MythTv backend password.
-                            </div>
-                        </li>-->
-                        <!--<li>
-                            <label for="chkDebugLogging">Enable MythTv debug logging</label>
-                            <input type="checkbox" id="chkDebugLogging" data-mini="true" />
-                        </li>-->
                         <li>
                             <label for="chkLoadChannelIcons">MythTV has channel icons</label>
                             <input type="checkbox" id="chkLoadChannelIcons" data-mini="true" />
                         </li>
+                        <li>
+                            <label for="chkUseSchedulesDirectImages">Grab images from SchedulesDirect</label>
+                            <input type="checkbox" id="chkUseSchedulesDirectImages" data-mini="true" />
+                            <div class="fieldDescription">
+                                Will only work if MythTV uses Schedules Direct as the data source and so has correct program IDs.
+                            </div>
+                        </li>
+
                         <li>
                             <button type="submit" data-theme="b">Save</button>
                             <button type="button" onclick="history.back();">Cancel</button>
@@ -92,10 +78,8 @@
                     $('#txtHost', page).val(config.Host || "");
                     $('#txtUncPath', page).val(config.UncPath || "");
                     $('#txtRecExclude', page).val(config.RecGroupExclude || "");
-                    //$('#txtUserName', page).val(config.UserName || "");
-                    //$('#txtPassword', page).val(config.Password || "");
-                    //$('#chkDebugLogging', page).checked(config.EnableDebugLogging || false).checkboxradio("refresh");
                     $('#chkLoadChannelIcons', page).checked(config.LoadChannelIcons || false).checkboxradio("refresh");
+                    $('#chkUseSchedulesDirectImages', page).checked(config.UseSchedulesDirectImages || false).checkboxradio("refresh");
 
                     Dashboard.hideLoadingMsg();
                 });
@@ -112,10 +96,8 @@
                     config.Host = $('#txtHost', form).val();
                     config.UncPath = $('#txtUncPath', form).val();
                     config.RecGroupExclude = $('#txtRecExclude', form).val();
-                    //config.UserName = $('#txtUserName', form).val();
-                    //config.Password = $('#txtPassword', form).val();
-                    //config.EnableDebugLogging = $('#chkDebugLogging', form).checked();
                     config.LoadChannelIcons = $('#chkLoadChannelIcons', form).checked();
+                    config.UseSchedulesDirectImages = $('#chkUseSchedulesDirectImages', form).checked();
 
                     ApiClient.updatePluginConfiguration(MythTvConfigurationPage.pluginUniqueId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                 });

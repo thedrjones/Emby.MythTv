@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -31,22 +31,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MediaBrowser.Common, Version=3.1.6161.23127, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MediaBrowser.Common.3.0.691\lib\portable-net45+win8+wpa81\MediaBrowser.Common.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="MediaBrowser.Controller, Version=3.1.6161.23125, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MediaBrowser.Server.Core.3.0.691\lib\net45\MediaBrowser.Controller.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="MediaBrowser.Model, Version=3.1.6161.23126, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MediaBrowser.Common.3.0.691\lib\portable-net45+win8+wpa81\MediaBrowser.Model.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO" />
+    <Reference Include="System.Net.Primitives" />
+    <Reference Include="System.Runtime" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Threading.Tasks" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -57,6 +50,8 @@
     <Compile Include="Helpers\AsyncLock.cs" />
     <Compile Include="Helpers\AsyncSemaphore.cs" />
     <Compile Include="Helpers\GeneralHelpers.cs" />
+    <Compile Include="Images\IImageGrabber.cs" />
+    <Compile Include="Images\SchedulesDirect.cs" />
     <Compile Include="LiveTvService.cs" />
     <Compile Include="Model\Artwork.cs" />
     <Compile Include="Model\ArtworkInfo.cs" />
@@ -76,6 +71,7 @@
     <Compile Include="Model\Recording.cs" />
     <Compile Include="Model\RecRule.cs" />
     <Compile Include="Model\RecRuleList.cs" />
+    <Compile Include="Model\ScheduleDirect.cs" />
     <Compile Include="Model\Version.cs" />
     <Compile Include="Model\VideoSource.cs" />
     <Compile Include="Model\VideoSourceList.cs" />
@@ -103,7 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
+    <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html" />
@@ -114,7 +110,6 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -123,4 +118,31 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1')">
+      <ItemGroup>
+        <Reference Include="MediaBrowser.Common">
+          <HintPath>..\packages\MediaBrowser.Common\lib\netstandard1.3\MediaBrowser.Common.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="MediaBrowser.Model">
+          <HintPath>..\packages\MediaBrowser.Common\lib\netstandard1.3\MediaBrowser.Model.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1')">
+      <ItemGroup>
+        <Reference Include="MediaBrowser.Controller">
+          <HintPath>..\packages\MediaBrowser.Server.Core\lib\netstandard1.3\MediaBrowser.Controller.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
 </Project>

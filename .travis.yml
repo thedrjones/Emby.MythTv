@@ -1,5 +1,7 @@
 language: csharp
 solution: Emby.MythTv.sln
+install:
+  mono .paket/paket.exe install
 deploy:
   provider: releases
   api_key:
