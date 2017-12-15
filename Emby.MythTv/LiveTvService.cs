@@ -661,7 +661,7 @@ namespace Emby.MythTv
 
             using (var stream = await backendInfoTask)
             {
-                serverVersion = UtilityResponse.GetVersion(stream, _jsonSerializer, _logger);
+                serverVersion = MythResponse.GetVersion(stream, _jsonSerializer, _logger);
             }
             
             //Tuner information

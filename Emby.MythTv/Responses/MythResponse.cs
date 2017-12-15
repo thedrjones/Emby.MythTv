@@ -12,7 +12,7 @@ using Emby.MythTv.Model;
 
 namespace Emby.MythTv.Responses
 {
-    public class UtilityResponse
+    public class MythResponse
     {
         public static string GetVersion(Stream stream, IJsonSerializer json, ILogger logger)
         {
