@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace Emby.MythTv.Model
 {
-    public class ConnectionInfo
+    public class LogInfo
     {
-        public Version Version { get; set; }
-        public Database Database { get; set; }
-        public WOL WOL { get; set; }
+        public string LogArgs { get; set; }
     }
 }
