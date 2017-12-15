@@ -16,24 +16,13 @@ namespace Emby.MythTv.Responses
     {
         public static string GetVersion(Stream stream, IJsonSerializer json, ILogger logger)
         {
-            var root = ParseConnectionInfo(stream, json);
-            UtilsHelper.DebugInformation(logger, string.Format("[MythTV] GetRecRule Response: {0}", json.SerializeToString(root)));
-            return root.ConnectionInfo.Version.Ver;
+            var root = json.DeserializeFromStream<RootBackendInfoObject>(stream);
+            return root.BackendInfo.Build.Version;
         }
 
-        private static RootConnectionInfoObject ParseConnectionInfo(Stream stream, IJsonSerializer json)
+        private class RootBackendInfoObject
         {
-            using (var reader = new StreamReader(stream, new UTF8Encoding()))
-            {
-                string resptext = reader.ReadToEnd();
-                resptext = Regex.Replace(resptext, "{\"Version\": {\"Version\"", "{\"Version\": {\"Ver\"");
-                return json.DeserializeFromString<RootConnectionInfoObject>(resptext);
-            }
-        }
-
-        private class RootConnectionInfoObject
-        {
-            public ConnectionInfo ConnectionInfo { get; set; }
+            public BackendInfo BackendInfo { get; set; }
         }
     }
 }

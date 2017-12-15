@@ -650,7 +650,7 @@ namespace Emby.MythTv
             bool upgradeAvailable = false;
             string serverVersion = string.Empty;
 
-            var conInfoTask = _httpClient.Get(GetOptions(cancellationToken, "/Myth/GetConnectionInfo")).ConfigureAwait(false);
+            var backendInfoTask = _httpClient.Get(GetOptions(cancellationToken, "/Myth/GetBackendInfo")).ConfigureAwait(false);
             var tunersTask = _httpClient.Get(GetOptions(cancellationToken, "/Dvr/GetEncoderList")).ConfigureAwait(false);
 
             List<LiveTvTunerInfo> tvTunerInfos;
@@ -659,7 +659,7 @@ namespace Emby.MythTv
                 tvTunerInfos = new DvrResponse().GetTuners(tunerStream, _jsonSerializer, _logger);
             }
 
-            using (var stream = await conInfoTask)
+            using (var stream = await backendInfoTask)
             {
                 serverVersion = UtilityResponse.GetVersion(stream, _jsonSerializer, _logger);
             }
