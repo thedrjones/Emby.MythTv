@@ -58,37 +58,6 @@ namespace Emby.MythTv
             }
         }
 
-        public List<string> RecordingUncs
-        {
-            get
-            {
-                if (!string.IsNullOrWhiteSpace(this.Configuration.UncPath))
-                {
-                    return this.Configuration.UncPath
-                        .Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                        .ToList();
-                }
-
-                return new List<string>();
-            }
-        }
-
-
-        public List<string> RecGroupExclude
-        {
-            get
-            {
-                if (!string.IsNullOrWhiteSpace(this.Configuration.RecGroupExclude))
-                {
-                    return this.Configuration.RecGroupExclude
-                        .Split(new string[] { ";","," }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(r => r.Trim()).ToList();
-                }
-
-                return new List<string>();
-            }
-        }
-
         /// <summary>
         /// Gets the instance.
         /// </summary>

@@ -4,24 +4,16 @@
     <title>MythTV</title>
   </head>
   <body>
-    <div data-role="page" class="page type-interior pluginConfigurationPage mythTvConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-textarea">
+    <div data-role="page" class="page type-interior pluginConfigurationPage mythTvConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-textarea,emby-collapse">
 
       <div data-role="content">
         <div class="content-primary" style="max-width:700px;">
 
+          <h1>MythTV</h1>
+
           <div class="inputContainer">
             <input is="emby-input" id="txtHost" label="MythTV host:" autocomplete="off" />
             <div class="fieldDescription">MythTV backend host IP.</div>
-          </div>
-
-          <div class="inputContainer">
-            <textarea is="emby-textarea" id="txtUncPath" label="Recording UNC:" class="textarea-mono"></textarea>
-            <div class="fieldDescription">MythTV Recordings Path. One per line. Must be accessible by Emby server.</div>
-          </div>
-
-          <div class="inputContainer">
-            <input is="emby-input" id="txtRecExclude" label="Exclude recordings categories:" autocomplete="off" />
-            <div class="fieldDescription">Exclude recordings of these types, comma separated.</div>
           </div>
 
           <div class="checkboxContainer checkboxContainer-withDescription">
@@ -29,7 +21,7 @@
               <input type="checkbox" is="emby-checkbox" id="chkLoadChannelIcons" />
               <span>MythTV has channel icons</span>
             </label>
-            <div class="fieldDescription checkboxFieldDescription">Import MythTV channel icons into Emby</div>
+            <div class="fieldDescription checkboxFieldDescription">Import MythTV channel icons into Emby.</div>
           </div>
 
           <div class="checkboxContainer checkboxContainer-withDescription">
@@ -38,6 +30,23 @@
               <span>Grab images from SchedulesDirect</span>
             </label>
             <div class="fieldDescription checkboxFieldDescription">Will only work if MythTV uses Schedules Direct as the data source and so has correct program IDs.</div>
+          </div>
+
+          <br />
+          <h1>Advanced</h1>
+
+          <div is="emby-collapse" title="Storage Groups">
+            <div class="collapseContent">
+              <p>Override MythTV storage group directories so Emby can access content.  Only required if Emby cannot access the standard MythTV paths.</p>
+              <div class="paperList storageGroups"></div>
+            </div>
+          </div>
+
+          <div is="emby-collapse" title="Recording Groups">
+            <div class="collapseContent">
+              <p>Emby will only show recordings in the groups selected below:</p>
+              <div class="checkboxList recGroups"></div>
+            </div>
           </div>
 
           <button is="emby-button" type="button" onclick="MythTvConfigurationPage.submit();" class="raised button-submit block"><span>Save</span></button>
@@ -50,6 +59,8 @@
         
         var MythTvConfigurationPage = {
           pluginUniqueId: "3a64de78-51be-495e-89de-0bb46f8c28f4",
+          storageGroups: [],
+          recGroups: [],
 
           load: function() {
         
@@ -60,27 +71,122 @@
             ApiClient.getPluginConfiguration(MythTvConfigurationPage.pluginUniqueId).then(function (config) {
               
               $('#txtHost', page).val(config.Host || "");
-              $('#txtUncPath', page).val(config.UncPath || "");
-              $('#txtRecExclude', page).val(config.RecGroupExclude || "");
               $('#chkLoadChannelIcons', page).checked(config.LoadChannelIcons || false).checkboxradio("refresh");
               $('#chkUseSchedulesDirectImages', page).checked(config.UseSchedulesDirectImages || false).checkboxradio("refresh");
-              
+
+              MythTvConfigurationPage.storageGroups = config.StorageGroupMaps;
+              MythTvConfigurationPage.recGroups = config.RecGroups;
+
+              if (config.Host) {
+                MythTvConfigurationPage.renderStorageGroups(page);
+                MythTvConfigurationPage.renderRecordingGroups(page);
+              }
+
               Dashboard.hideLoadingMsg();
             });
+          },
+
+          renderStorageGroups: function (page) {
+
+            console.log("rendering storage groups");
+            var html = "";
+            
+            for (var ndx = 0; ndx < MythTvConfigurationPage.storageGroups.length; ndx++) {
+              
+              var group = MythTvConfigurationPage.storageGroups[ndx];
+              
+              if (group) {
+                
+                html += "<div class='listItem'>";
+                
+                html += '<i class="md-icon listItemIcon">folder</i>';
+                
+                html += '<div class="listItemBody">';
+                html += "<h3 class='listItemBodyText'>" + group.GroupName + "</h3>";
+                html += "<div class='listItemBodyText secondary'>MythTV: " + group.DirName + "</div>";
+                html += "<div class='listItemBodyText secondary'>Emby: " + group.DirNameEmby + "</div>";
+                html += "</div>";
+
+                html += '<button type="button" is="paper-icon-button-light"'
+                  + ' data-storage-group-index="' + ndx + '"'
+                  + ' data-storage-group-name="' + group.GroupName + '"'
+                  + ' onclick="MythTvConfigurationPage.getDirectory(this);"><i class="md-icon">search</i></button>';
+                
+                html += "</div>";
+              }
+            }
+            
+            page.querySelector('.storageGroups').innerHTML = html;
+          },
+
+          renderRecordingGroups: function (page) {
+
+            console.log("rendering rec groups");
+            var html = "";
+            
+            for (var ndx = 0; ndx < MythTvConfigurationPage.recGroups.length; ndx++) {
+              
+              var group = MythTvConfigurationPage.recGroups[ndx];
+              
+              if (group) {
+
+                html += "<label>";
+                html += '<input is="emby-checkbox" type="checkbox" id="chkRecGroup' + ndx + '" />'
+                html += '<span>' + group.Name + '</span>';
+                html += "</label>";
+                
+              }
+            }
+            
+            page.querySelector('.recGroups').innerHTML = html;
+
+            for (var ndx = 0; ndx < MythTvConfigurationPage.recGroups.length; ndx++) {            
+              var group = MythTvConfigurationPage.recGroups[ndx];
+              $('#chkRecGroup' + ndx, page).checked(group.Enabled || false).checkboxradio("refresh");
+            }
+            
+          },
+
+          getDirectory: function(link) {
+
+            var ndx = link.getAttribute('data-storage-group-index');
+            var name = link.getAttribute('data-storage-group-name') + " Storage Group Path";
+            var page = $($.mobile.activePage)[0];
+
+            require(["directorybrowser"], function(directoryBrowser) {
+              var picker = new directoryBrowser;
+              picker.show({
+                callback: function(path) {
+                  console.log(path),
+                  MythTvConfigurationPage.storageGroups[ndx].DirNameEmby = path,
+                  MythTvConfigurationPage.renderStorageGroups(page),
+                  console.log(MythTvConfigurationPage.storageGroups),
+                  picker.close()
+                },
+                validateWriteable: 0,
+                header: name
+              })
+            })
+
+            
           },
 
           submit: function(done) {
             Dashboard.showLoadingMsg();
             
             var page = $($.mobile.activePage)[0];
+
+            for (var ndx = 0; ndx < MythTvConfigurationPage.recGroups.length; ndx++) {            
+              MythTvConfigurationPage.recGroups[ndx].Enabled = $('#chkRecGroup' + ndx, page).checked();
+            }
             
             ApiClient.getPluginConfiguration(MythTvConfigurationPage.pluginUniqueId).then(function (config) {
 
               config.Host = $('#txtHost', page).val();
-              config.UncPath = $('#txtUncPath', page).val();
-              config.RecGroupExclude = $('#txtRecExclude', page).val();
               config.LoadChannelIcons = $('#chkLoadChannelIcons', page).checked();
               config.UseSchedulesDirectImages = $('#chkUseSchedulesDirectImages', page).checked();
+              config.StorageGroupMaps = MythTvConfigurationPage.storageGroups;
+              config.RecGroups = MythTvConfigurationPage.recGroups;
 
               ApiClient.updatePluginConfiguration(MythTvConfigurationPage.pluginUniqueId, config).then(function () {
                 Dashboard.hideLoadingMsg();

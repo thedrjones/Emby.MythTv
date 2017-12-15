@@ -29,6 +29,27 @@ namespace Emby.MythTv.Responses
 
     public class DvrResponse
     {
+        private Dictionary<string, StorageGroupMap> StorageGroups;
+
+        public DvrResponse() {}
+        
+        public DvrResponse(List<StorageGroupMap> groups)
+        {
+            StorageGroups = groups.ToDictionary(x => x.GroupName);
+        }
+
+        public List<string> GetRecGroupList(Stream stream, IJsonSerializer json, ILogger logger)
+        {
+            var root = json.DeserializeFromStream<RootRecGroupList>(stream);
+            var ans = root.StringList;
+            ans.Add("Deleted");
+            return ans;
+        }
+
+        private class RootRecGroupList
+        {
+            public List<string> StringList { get; set; }
+        }
 
         public List<LiveTvTunerInfo> GetTuners(Stream tunerStream, IJsonSerializer json, ILogger logger)
         {
@@ -110,8 +131,8 @@ namespace Emby.MythTv.Responses
         private RecRule GetOneRecRule(Stream stream, IJsonSerializer json, ILogger logger)
         {
             var root = json.DeserializeFromStream<RecRuleRoot>(stream);
-            UtilsHelper.DebugInformation(logger, string.Format("[MythTV] GetOneRecRule Response: {0}",
-                                                               json.SerializeToString(root)));
+            logger.Debug(string.Format("[MythTV] GetOneRecRule Response: {0}",
+                                       json.SerializeToString(root)));
             return root.RecRule;
         }
 
@@ -251,10 +272,10 @@ namespace Emby.MythTv.Responses
         public IEnumerable<RecordingInfo> GetRecordings(Stream stream, IJsonSerializer json, ILogger logger)
         {
 
-            var excluded = Plugin.Instance.RecGroupExclude;
+            var included = Plugin.Instance.Configuration.RecGroups.Where(x => x.Enabled == true).Select(x => x.Name).ToList();
             var root = json.DeserializeFromStream<ProgramListRoot>(stream);
             return root.ProgramList.Programs
-                .Where(i => !excluded.Contains(i.Recording.RecGroup))
+                .Where(i => included.Contains(i.Recording.RecGroup))
                 .Select(i => ProgramToRecordingInfo(i));
 
         }
@@ -313,29 +334,19 @@ namespace Emby.MythTv.Responses
 
             };
 
-            if (Plugin.Instance.RecordingUncs.Count > 0)
+            string recPath = Path.Combine(StorageGroups[item.Recording.StorageGroup].DirNameEmby, item.FileName);
+            if (File.Exists(recPath))
             {
-                foreach (string unc in Plugin.Instance.RecordingUncs)
-                {
-                    string recPath = Path.Combine(unc, item.FileName);
-                    if (File.Exists(recPath))
-                    {
-                        recInfo.Path = recPath;
-                        break;
-                    }
-                }
+                recInfo.Path = recPath;
+            }
+            else
+            {
+                recInfo.Url = string.Format("{0}/Content/GetFile?StorageGroup={1}&FileName={2}",
+                                            Plugin.Instance.Configuration.WebServiceUrl,
+                                            item.Recording.StorageGroup,
+                                            item.FileName);
             }
 
-            // only set the URL if the path is null
-            // using the URL seems to prevent direct streaming
-            if (recInfo.Path == null)
-            {
-                recInfo.Url = string.Format("{0}{1}",
-                                            Plugin.Instance.Configuration.WebServiceUrl,
-                                            string.Format("/Content/GetFile?StorageGroup={0}&FileName={1}",
-                                                          item.Recording.StorageGroup, item.FileName));
-            }
-            
             recInfo.Genres.AddRange(item.Category.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries));
 
             recInfo.HasImage = false;

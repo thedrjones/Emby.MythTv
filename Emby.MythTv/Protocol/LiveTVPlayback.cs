@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -57,18 +58,23 @@ namespace Emby.MythTv.Protocol
             return 0;
         }
 
-        public async Task<string> GetCurrentRecording(int id)
+        public async Task<string> GetCurrentRecording(int id, List<StorageGroupMap> groups)
         {
             var recorder = m_recorders[id];
             int fileSize = 0;
             Program program = null;
-            while (fileSize == 0)
+            string fileName;
+
+            do
             {
                 program = await recorder.GetCurrentRecording75();
-                fileSize = await recorder.QueryFileSize65(program.FileName.Split('/').Last(), "LiveTV");
+                fileName = program.FileName.Split('/').Last();
+                fileSize = await recorder.QueryFileSize65(fileName, "LiveTV");
                 await Task.Delay(500);
             }
-            return program.FileName;
+            while (fileSize == 0);
+            
+            return Path.Combine(groups.FirstOrDefault(x => x.GroupName == "LiveTV").DirNameEmby, fileName);
         }
 
         public async Task StopLiveTV(int id)

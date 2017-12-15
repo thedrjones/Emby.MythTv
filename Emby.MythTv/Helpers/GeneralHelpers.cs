@@ -14,18 +14,4 @@ namespace Emby.MythTv.Helpers
             return source.IndexOf(value, comparisonType) >= 0;
         }
     }
-
-    public static class UtilsHelper
-    {
-        public static void DebugInformation(ILogger logger, string message)
-        {
-            var config = Plugin.Instance.Configuration;
-            bool enableDebugLogging = config.EnableDebugLogging;
-
-            if (enableDebugLogging)
-            {
-                logger.Debug(message);
-            }
-        }
-    }
 }
