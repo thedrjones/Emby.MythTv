@@ -38,7 +38,7 @@ namespace Emby.MythTv.Responses
                 {
                     Name = channel.ChannelName,
                     Number = channel.ChanNum,
-                    Id = channel.ChanId.ToString(_usCulture),
+                    Id = channel.ChanId,
                     HasImage = false
                 };
 

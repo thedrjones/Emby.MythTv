@@ -1,4 +1,0 @@
-source https://www.nuget.org/api/v2
-
-nuget MediaBrowser.Common >= 3.0.691 restriction: >= net46
-nuget MediaBrowser.Server.Core >= 3.0.691 restriction: >= net46

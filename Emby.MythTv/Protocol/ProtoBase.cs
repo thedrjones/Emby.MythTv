@@ -111,7 +111,8 @@ namespace Emby.MythTv.Protocol
 
         public async Task<bool> OpenConnection()
         {
-            m_socket = new TcpClient(Server, Port);
+            m_socket = new TcpClient();
+            await m_socket.ConnectAsync(Server, Port);
             uint max_version = protomap.Keys.Max();
             var result = await SendCommand($"MYTH_PROTO_VERSION {max_version} {protomap[max_version]}");
             IsOpen = result[0] == "ACCEPT";
@@ -129,7 +130,8 @@ namespace Emby.MythTv.Protocol
             if (!protomap.ContainsKey(server_version))
                 throw new Exception($"Unknown version {server_version}");
 
-            m_socket = new TcpClient(Server, Port);
+            m_socket = new TcpClient();
+            await m_socket.ConnectAsync(Server, Port);
             result = await SendCommand($"MYTH_PROTO_VERSION {server_version} {protomap[server_version]}");
             IsOpen = result[0] == "ACCEPT";
             if(IsOpen)
@@ -148,7 +150,7 @@ namespace Emby.MythTv.Protocol
                 {
                     await SendCommand("DONE");
                 }
-                m_socket.Close();
+                m_socket.Dispose();
             }
             IsOpen = false;
         }

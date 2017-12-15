@@ -1,148 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{408C3F73-7432-4522-9BE4-C302F260DAED}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Emby.MythTv</RootNamespace>
-    <AssemblyName>Emby.MythTv</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFramework>netstandard1.3</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Collections" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.IO" />
-    <Reference Include="System.Net.Primitives" />
-    <Reference Include="System.Runtime" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Threading.Tasks" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <None Remove="Configuration\configPage.html" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Helpers\AsyncLock.cs" />
-    <Compile Include="Helpers\AsyncSemaphore.cs" />
-    <Compile Include="Helpers\GeneralHelpers.cs" />
-    <Compile Include="Images\IImageGrabber.cs" />
-    <Compile Include="Images\SchedulesDirect.cs" />
-    <Compile Include="LiveTvService.cs" />
-    <Compile Include="Model\Artwork.cs" />
-    <Compile Include="Model\ArtworkInfo.cs" />
-    <Compile Include="Model\Cast.cs" />
-    <Compile Include="Model\CastMember.cs" />
-    <Compile Include="Model\Chain.cs" />
-    <Compile Include="Model\Channel.cs" />
-    <Compile Include="Model\ChannelInfoList.cs" />
-    <Compile Include="Model\ConnectionInfo.cs" />
-    <Compile Include="Model\Database.cs" />
-    <Compile Include="Model\Encoder.cs" />
-    <Compile Include="Model\EncoderList.cs" />
-    <Compile Include="Model\Input.cs" />
-    <Compile Include="Model\Program.cs" />
-    <Compile Include="Model\ProgramGuide.cs" />
-    <Compile Include="Model\ProgramList.cs" />
-    <Compile Include="Model\Recording.cs" />
-    <Compile Include="Model\RecRule.cs" />
-    <Compile Include="Model\RecRuleList.cs" />
-    <Compile Include="Model\ScheduleDirect.cs" />
-    <Compile Include="Model\Version.cs" />
-    <Compile Include="Model\VideoSource.cs" />
-    <Compile Include="Model\VideoSourceList.cs" />
-    <Compile Include="Model\WOL.cs" />
-    <Compile Include="Plugin.cs" />
-    <Compile Include="Configuration\PluginConfiguration.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Responses\ChannelResponse.cs" />
-    <Compile Include="Responses\DvrResponse.cs" />
-    <Compile Include="Responses\GuideResponse.cs" />
-    <Compile Include="Responses\UtilityResponse.cs" />
-    <Compile Include="Protocol\LiveTVPlayback.cs" />
-    <Compile Include="Protocol\ProtoBase.cs" />
-    <Compile Include="Protocol\ProtoMonitor.cs" />
-    <Compile Include="Protocol\ProtoPlayback.cs" />
-    <Compile Include="Protocol\ProtoRecorder.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="paket.references" />
-  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html" />
   </ItemGroup>
+
   <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <PackageReference Include="MediaBrowser.Server.Core" Version="3.3.15" />
+    <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1')">
-      <ItemGroup>
-        <Reference Include="MediaBrowser.Common">
-          <HintPath>..\packages\MediaBrowser.Common\lib\netstandard1.3\MediaBrowser.Common.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-        <Reference Include="MediaBrowser.Model">
-          <HintPath>..\packages\MediaBrowser.Common\lib\netstandard1.3\MediaBrowser.Model.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1')">
-      <ItemGroup>
-        <Reference Include="MediaBrowser.Controller">
-          <HintPath>..\packages\MediaBrowser.Server.Core\lib\netstandard1.3\MediaBrowser.Controller.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
+
 </Project>

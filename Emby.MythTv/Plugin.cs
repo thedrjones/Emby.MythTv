@@ -31,6 +31,12 @@ namespace Emby.MythTv
             };
         }
 
+        private Guid _id = new Guid("3a64de78-51be-495e-89de-0bb46f8c28f4");
+        public override Guid Id
+        {
+            get { return _id; }
+        }
+
         /// <summary>
         /// Gets the name of the plugin
         /// </summary>

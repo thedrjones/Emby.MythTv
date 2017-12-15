@@ -66,7 +66,7 @@ namespace Emby.MythTv.Protocol
             {
                 program = await recorder.GetCurrentRecording75();
                 fileSize = await recorder.QueryFileSize65(program.FileName.Split('/').Last(), "LiveTV");
-                System.Threading.Thread.Sleep(500);
+                await Task.Delay(500);
             }
             return program.FileName;
         }
