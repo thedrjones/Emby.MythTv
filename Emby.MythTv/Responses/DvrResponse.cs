@@ -2,6 +2,7 @@
 using MediaBrowser.Controller.LiveTv;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
+using MediaBrowser.Model.IO;
 using MediaBrowser.Model.LiveTv;
 using System;
 using System.Collections.Generic;
@@ -269,14 +270,14 @@ namespace Emby.MythTv.Responses
             return timer;
         }
 
-        public IEnumerable<RecordingInfo> GetRecordings(Stream stream, IJsonSerializer json, ILogger logger)
+        public IEnumerable<RecordingInfo> GetRecordings(Stream stream, IJsonSerializer json, ILogger logger, IFileSystem fileSystem)
         {
 
             var included = Plugin.Instance.Configuration.RecGroups.Where(x => x.Enabled == true).Select(x => x.Name).ToList();
             var root = json.DeserializeFromStream<ProgramListRoot>(stream);
             return root.ProgramList.Programs
                 .Where(i => included.Contains(i.Recording.RecGroup))
-                .Select(i => ProgramToRecordingInfo(i));
+                .Select(i => ProgramToRecordingInfo(i, fileSystem));
 
         }
 
@@ -295,7 +296,7 @@ namespace Emby.MythTv.Responses
             return RecordingStatus.Error;
         }
 
-        private RecordingInfo ProgramToRecordingInfo(Program item)
+        private RecordingInfo ProgramToRecordingInfo(Program item, IFileSystem fileSystem)
         {
 
             RecordingInfo recInfo = new RecordingInfo()
@@ -335,7 +336,7 @@ namespace Emby.MythTv.Responses
             };
 
             string recPath = Path.Combine(StorageGroups[item.Recording.StorageGroup].DirNameEmby, item.FileName);
-            if (File.Exists(recPath))
+            if (fileSystem.FileExists(recPath))
             {
                 recInfo.Path = recPath;
             }

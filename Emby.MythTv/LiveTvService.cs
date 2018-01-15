@@ -13,6 +13,7 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.MediaInfo;
 using MediaBrowser.Model.Net;
 using MediaBrowser.Model.Serialization;
+using MediaBrowser.Model.IO;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -31,6 +32,7 @@ namespace Emby.MythTv
         private readonly IHttpClient _httpClient;
         private readonly IJsonSerializer _jsonSerializer;
         private readonly ILogger _logger;
+        private readonly IFileSystem _fileSystem;
         private LiveTVPlayback _liveTV;
         private IImageGrabber _imageGrabber;
 
@@ -42,11 +44,12 @@ namespace Emby.MythTv
         private readonly AsyncLock _channelLock = new AsyncLock();
         private Dictionary<string, string> channelNums;
 
-        public LiveTvService(IHttpClient httpClient, IJsonSerializer jsonSerializer, ILogger logger)
+        public LiveTvService(IHttpClient httpClient, IJsonSerializer jsonSerializer, ILogger logger, IFileSystem fileSystem)
         {
             _httpClient = httpClient;
             _jsonSerializer = jsonSerializer;
             _logger = logger;
+            _fileSystem = fileSystem;
         }
 
         /// <summary>
@@ -222,7 +225,7 @@ namespace Emby.MythTv
 
             using (var stream = await _httpClient.Get(GetOptions(cancellationToken, "/Dvr/GetRecordedList")).ConfigureAwait(false))
             {
-                return new DvrResponse(Plugin.Instance.Configuration.StorageGroupMaps).GetRecordings(stream, _jsonSerializer, _logger);
+                return new DvrResponse(Plugin.Instance.Configuration.StorageGroupMaps).GetRecordings(stream, _jsonSerializer, _logger, _fileSystem);
             }
 
         }
