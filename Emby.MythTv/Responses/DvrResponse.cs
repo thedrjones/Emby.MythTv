@@ -312,7 +312,7 @@ namespace Emby.MythTv.Responses
                 ProgramId = $"{item.Channel.ChanId}_{item.StartTime.Ticks}",
                 Status = RecStatusToRecordingStatus(item.Recording.Status),
                 IsRepeat = item.Repeat,
-                EpisodeTitle = item.SubTitle,
+                // EpisodeTitle = item.SubTitle,
                 IsHD = (item.VideoProps & VideoFlags.VID_HDTV) == VideoFlags.VID_HDTV,
                 Audio = ProgramAudio.Stereo,
                 OriginalAirDate = item.Airdate,
@@ -334,6 +334,13 @@ namespace Emby.MythTv.Responses
                 ShowId = item.ProgramId,
 
             };
+            if (!string.IsNullOrEmpty(item.SubTitle)) {
+                recInfo.EpisodeTitle = item.SubTitle;
+            } else if (item.Season != null && item.Episode != null && item.Season > 0 && item.Episode > 0) {
+                recInfo.EpisodeTitle = string.Format("{0:D}x{1:D2}", item.Season, item.Episode);
+            } else {
+                recInfo.EpisodeTitle = item.Airdate.ToString("yyyy-MM-dd");
+            }
 
             string recPath = Path.Combine(StorageGroups[item.Recording.StorageGroup].DirNameEmby, item.FileName);
             if (fileSystem.FileExists(recPath))

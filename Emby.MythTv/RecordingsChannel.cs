@@ -242,7 +242,6 @@ namespace Emby.MythTv
                 Id = item.Id,
                 //IndexNumber = item.IndexNumber,
                 MediaType = item.ChannelType == ChannelType.TV ? ChannelMediaType.Video : ChannelMediaType.Audio,
-                // MediaType = ChannelMediaType.Video,
                 MediaSources = new List<MediaSourceInfo>
                 {
                     new MediaSourceInfo
