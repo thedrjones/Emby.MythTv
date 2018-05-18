@@ -36,6 +36,8 @@ namespace Emby.MythTv
         private LiveTVPlayback _liveTV;
         private IImageGrabber _imageGrabber;
 
+        public DateTime LastRecordingChange = DateTime.MinValue;
+
         // cache the listings data
         private readonly AsyncLock _guideLock = new AsyncLock();
         private GuideResponse _guide;
@@ -247,6 +249,8 @@ namespace Emby.MythTv
                                       "/Dvr/DeleteRecording");
             await _httpClient.Post(options).ConfigureAwait(false);
 
+            LastRecordingChange = DateTime.UtcNow;
+
         }
 
         /// <summary>
@@ -285,6 +289,8 @@ namespace Emby.MythTv
 
             var options = PostOptions(cancellationToken, $"RecordId={timerId}", "/Dvr/RemoveRecordSchedule");
             await _httpClient.Post(options).ConfigureAwait(false);
+
+            LastRecordingChange = DateTime.UtcNow;
         
         }
 
@@ -473,8 +479,9 @@ namespace Emby.MythTv
                 var json = new DvrResponse().GetNewTimerJson(info, stream, _jsonSerializer, _logger);
                 var post = PostOptions(cancellationToken, ConvertJsonRecRuleToPost(json), "/Dvr/UpdateRecordSchedule");
                 await _httpClient.Post(post).ConfigureAwait(false);
-            }          
+            }
 
+            LastRecordingChange = DateTime.UtcNow;
         }
 
         /// <summary>
