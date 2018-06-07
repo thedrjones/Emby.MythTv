@@ -1,6 +1,7 @@
 ﻿using Emby.MythTv.Helpers;
 using Emby.MythTv.Responses;
 using Emby.MythTv.Protocol;
+using Emby.MythTv.Model;
 using MediaBrowser.Common.Extensions;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Drawing;
@@ -12,6 +13,7 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.MediaInfo;
 using MediaBrowser.Model.Net;
 using MediaBrowser.Model.Serialization;
+using MediaBrowser.Model.IO;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -30,8 +32,11 @@ namespace Emby.MythTv
         private readonly IHttpClient _httpClient;
         private readonly IJsonSerializer _jsonSerializer;
         private readonly ILogger _logger;
+        private readonly IFileSystem _fileSystem;
         private LiveTVPlayback _liveTV;
         private IImageGrabber _imageGrabber;
+
+        public DateTime LastRecordingChange = DateTime.MinValue;
 
         // cache the listings data
         private readonly AsyncLock _guideLock = new AsyncLock();
@@ -41,16 +46,12 @@ namespace Emby.MythTv
         private readonly AsyncLock _channelLock = new AsyncLock();
         private Dictionary<string, string> channelNums;
 
-        public LiveTvService(IHttpClient httpClient, IJsonSerializer jsonSerializer, ILogger logger)
+        public LiveTvService(IHttpClient httpClient, IJsonSerializer jsonSerializer, ILogger logger, IFileSystem fileSystem)
         {
             _httpClient = httpClient;
             _jsonSerializer = jsonSerializer;
             _logger = logger;
-        }
-
-        private async void OnPluginConfigChange(object sender, EventArgs e)
-        {
-            await EnsureSetup();
+            _fileSystem = fileSystem;
         }
 
         /// <summary>
@@ -68,11 +69,60 @@ namespace Emby.MythTv
                 throw new InvalidOperationException("MythTV host must be configured.");
             }
 
-            //if (string.IsNullOrEmpty(config.UncPath))
-            //{
-            //    _logger.Error("[MythTV] UncPath must be configured.");
-            //    throw new InvalidOperationException("[MythTV] UncPath must be configured.");
-            //}
+
+            List<StorageGroupDir> storageGroups;
+            using (var stream = await _httpClient.Get(GetOptions(CancellationToken.None, "/Myth/GetStorageGroupDirs")).ConfigureAwait(false))
+            {
+                storageGroups = new MythResponse().GetStorageGroupDirs(stream, _jsonSerializer, _logger, true);
+            }
+            
+            List<StorageGroupMap> storageGroupMaps = config.StorageGroupMaps;
+            if (!storageGroupMaps.Any())
+            {
+                storageGroupMaps = storageGroups.Select(x => new StorageGroupMap {
+                        GroupName = x.GroupName,
+                        DirName = x.DirName,
+                        DirNameEmby = x.DirName
+                    }).ToList();
+            }
+            else
+            {
+                // drop groups no longer on server
+                storageGroupMaps.RemoveAll(g => !storageGroups.Select(x => x.GroupName).Contains(g.GroupName));
+
+                // add in new groups from server
+                List<StorageGroupDir> newGroups = storageGroups;
+                newGroups.RemoveAll(g => storageGroupMaps.Select(x => x.GroupName).Contains(g.GroupName));
+                storageGroupMaps.AddRange(newGroups.Select(x => new StorageGroupMap {
+                            GroupName = x.GroupName,
+                            DirName = x.DirName,
+                            DirNameEmby = x.DirName
+                        }));
+            }
+            Plugin.Instance.Configuration.StorageGroupMaps = storageGroupMaps;
+
+            List<string> recGroupNames;
+            using (var stream = await _httpClient.Get(GetOptions(CancellationToken.None, "/Dvr/GetRecGroupList")).ConfigureAwait(false))
+            {
+                recGroupNames = new DvrResponse().GetRecGroupList(stream, _jsonSerializer, _logger);
+            }
+
+            List<RecGroup> recGroups = config.RecGroups;
+            if (!recGroups.Any())
+            {
+                recGroups = recGroupNames.Select(x => new RecGroup(x)).ToList();
+            }
+            else
+            {
+                // drop groups no longer on server
+                recGroups.RemoveAll(g => !recGroupNames.Contains(g.Name));
+
+                // add in new groups from server
+                recGroups.AddRange(recGroupNames.Except(recGroups.Select(x => x.Name)).Select(g => new RecGroup(g)).ToList());
+            }
+            Plugin.Instance.Configuration.RecGroups = recGroups;
+            
+            Plugin.Instance.SaveConfiguration();
 
             if (_liveTV == null)
             {
@@ -177,7 +227,7 @@ namespace Emby.MythTv
 
             using (var stream = await _httpClient.Get(GetOptions(cancellationToken, "/Dvr/GetRecordedList")).ConfigureAwait(false))
             {
-                return new DvrResponse().GetRecordings(stream, _jsonSerializer, _logger);
+                return new DvrResponse(Plugin.Instance.Configuration.StorageGroupMaps).GetRecordings(stream, _jsonSerializer, _logger, _fileSystem);
             }
 
         }
@@ -198,6 +248,8 @@ namespace Emby.MythTv
                                       $"RecordedId={recordingId}",
                                       "/Dvr/DeleteRecording");
             await _httpClient.Post(options).ConfigureAwait(false);
+
+            LastRecordingChange = DateTime.UtcNow;
 
         }
 
@@ -237,6 +289,8 @@ namespace Emby.MythTv
 
             var options = PostOptions(cancellationToken, $"RecordId={timerId}", "/Dvr/RemoveRecordSchedule");
             await _httpClient.Post(options).ConfigureAwait(false);
+
+            LastRecordingChange = DateTime.UtcNow;
         
         }
 
@@ -425,8 +479,9 @@ namespace Emby.MythTv
                 var json = new DvrResponse().GetNewTimerJson(info, stream, _jsonSerializer, _logger);
                 var post = PostOptions(cancellationToken, ConvertJsonRecRuleToPost(json), "/Dvr/UpdateRecordSchedule");
                 await _httpClient.Post(post).ConfigureAwait(false);
-            }          
+            }
 
+            LastRecordingChange = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -470,7 +525,7 @@ namespace Emby.MythTv
             if (id == 0)
                 return new MediaSourceInfo();
             
-            var filepath = await _liveTV.GetCurrentRecording(id);
+            var filepath = await _liveTV.GetCurrentRecording(id, Plugin.Instance.Configuration.StorageGroupMaps);
 
             _logger.Info($"[MythTV] ChannelStream at {filepath}");
 
@@ -564,17 +619,6 @@ namespace Emby.MythTv
         {
             _logger.Info($"[MythTV] Closing {id}");
             await _liveTV.StopLiveTV(int.Parse(id));
-        }
-
-        public async Task CopyFilesAsync(StreamReader source, StreamWriter destination)
-        {
-            _logger.Info("[MythTV] Start CopyFiles Async");
-            char[] buffer = new char[0x1000];
-            int numRead;
-            while ((numRead = await source.ReadAsync(buffer, 0, buffer.Length)) != 0)
-            {
-                await destination.WriteAsync(buffer, 0, numRead);
-            }
         }
 
         public async Task<SeriesTimerInfo> GetNewTimerDefaultsAsync(CancellationToken cancellationToken, ProgramInfo program = null)

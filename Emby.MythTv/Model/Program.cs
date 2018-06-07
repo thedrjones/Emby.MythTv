@@ -26,7 +26,7 @@ namespace Emby.MythTv.Model
         public string ProgramFlags { get; set; }
         public string FileName { get; set; }
         public string HostName { get; set; }
-        public DateTime? Airdate { get; set; }
+        public DateTime Airdate { get; set; }
         public string Description { get; set; }
         public string Inetref { get; set; }
         public int? Season { get; set; }

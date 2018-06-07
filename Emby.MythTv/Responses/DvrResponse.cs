@@ -2,6 +2,7 @@
 using MediaBrowser.Controller.LiveTv;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
+using MediaBrowser.Model.IO;
 using MediaBrowser.Model.LiveTv;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,27 @@ namespace Emby.MythTv.Responses
 
     public class DvrResponse
     {
+        private Dictionary<string, StorageGroupMap> StorageGroups;
+
+        public DvrResponse() {}
+        
+        public DvrResponse(List<StorageGroupMap> groups)
+        {
+            StorageGroups = groups.ToDictionary(x => x.GroupName);
+        }
+
+        public List<string> GetRecGroupList(Stream stream, IJsonSerializer json, ILogger logger)
+        {
+            var root = json.DeserializeFromStream<RootRecGroupList>(stream);
+            var ans = root.StringList;
+            ans.Add("Deleted");
+            return ans;
+        }
+
+        private class RootRecGroupList
+        {
+            public List<string> StringList { get; set; }
+        }
 
         public List<LiveTvTunerInfo> GetTuners(Stream tunerStream, IJsonSerializer json, ILogger logger)
         {
@@ -110,8 +132,8 @@ namespace Emby.MythTv.Responses
         private RecRule GetOneRecRule(Stream stream, IJsonSerializer json, ILogger logger)
         {
             var root = json.DeserializeFromStream<RecRuleRoot>(stream);
-            UtilsHelper.DebugInformation(logger, string.Format("[MythTV] GetOneRecRule Response: {0}",
-                                                               json.SerializeToString(root)));
+            logger.Debug(string.Format("[MythTV] GetOneRecRule Response: {0}",
+                                       json.SerializeToString(root)));
             return root.RecRule;
         }
 
@@ -248,14 +270,14 @@ namespace Emby.MythTv.Responses
             return timer;
         }
 
-        public IEnumerable<RecordingInfo> GetRecordings(Stream stream, IJsonSerializer json, ILogger logger)
+        public IEnumerable<RecordingInfo> GetRecordings(Stream stream, IJsonSerializer json, ILogger logger, IFileSystem fileSystem)
         {
 
-            var excluded = Plugin.Instance.RecGroupExclude;
+            var included = Plugin.Instance.Configuration.RecGroups.Where(x => x.Enabled == true).Select(x => x.Name).ToList();
             var root = json.DeserializeFromStream<ProgramListRoot>(stream);
             return root.ProgramList.Programs
-                .Where(i => !excluded.Contains(i.Recording.RecGroup))
-                .Select(i => ProgramToRecordingInfo(i));
+                .Where(i => included.Contains(i.Recording.RecGroup))
+                .Select(i => ProgramToRecordingInfo(i, fileSystem));
 
         }
 
@@ -274,7 +296,7 @@ namespace Emby.MythTv.Responses
             return RecordingStatus.Error;
         }
 
-        private RecordingInfo ProgramToRecordingInfo(Program item)
+        private RecordingInfo ProgramToRecordingInfo(Program item, IFileSystem fileSystem)
         {
 
             RecordingInfo recInfo = new RecordingInfo()
@@ -290,7 +312,7 @@ namespace Emby.MythTv.Responses
                 ProgramId = $"{item.Channel.ChanId}_{item.StartTime.Ticks}",
                 Status = RecStatusToRecordingStatus(item.Recording.Status),
                 IsRepeat = item.Repeat,
-                EpisodeTitle = item.SubTitle,
+                // EpisodeTitle = item.SubTitle,
                 IsHD = (item.VideoProps & VideoFlags.VID_HDTV) == VideoFlags.VID_HDTV,
                 Audio = ProgramAudio.Stereo,
                 OriginalAirDate = item.Airdate,
@@ -312,30 +334,27 @@ namespace Emby.MythTv.Responses
                 ShowId = item.ProgramId,
 
             };
-
-            if (Plugin.Instance.RecordingUncs.Count > 0)
-            {
-                foreach (string unc in Plugin.Instance.RecordingUncs)
-                {
-                    string recPath = Path.Combine(unc, item.FileName);
-                    if (File.Exists(recPath))
-                    {
-                        recInfo.Path = recPath;
-                        break;
-                    }
-                }
+            if (!string.IsNullOrEmpty(item.SubTitle)) {
+                recInfo.EpisodeTitle = item.SubTitle;
+            } else if (item.Season != null && item.Episode != null && item.Season > 0 && item.Episode > 0) {
+                recInfo.EpisodeTitle = string.Format("{0:D}x{1:D2}", item.Season, item.Episode);
+            } else {
+                recInfo.EpisodeTitle = item.Airdate.ToString("yyyy-MM-dd");
             }
 
-            // only set the URL if the path is null
-            // using the URL seems to prevent direct streaming
-            if (recInfo.Path == null)
+            string recPath = Path.Combine(StorageGroups[item.Recording.StorageGroup].DirNameEmby, item.FileName);
+            if (fileSystem.FileExists(recPath))
             {
-                recInfo.Url = string.Format("{0}{1}",
+                recInfo.Path = recPath;
+            }
+            else
+            {
+                recInfo.Url = string.Format("{0}/Content/GetFile?StorageGroup={1}&FileName={2}",
                                             Plugin.Instance.Configuration.WebServiceUrl,
-                                            string.Format("/Content/GetFile?StorageGroup={0}&FileName={1}",
-                                                          item.Recording.StorageGroup, item.FileName));
+                                            item.Recording.StorageGroup,
+                                            item.FileName);
             }
-            
+
             recInfo.Genres.AddRange(item.Category.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries));
 
             recInfo.HasImage = false;

@@ -27,8 +27,8 @@ namespace Emby.MythTv.Responses
                                                            bool loadChannelIcons)
         {
             var root = json.DeserializeFromStream<RootChannelInfoListObject>(stream).ChannelInfoList.ChannelInfos;
-            UtilsHelper.DebugInformation(logger, string.Format("[MythTV] GetChannels Response: {0}",
-                                                               json.SerializeToString(root)));
+            logger.Debug(string.Format("[MythTV] GetChannels Response: {0}",
+                                       json.SerializeToString(root)));
             return root.Select(x => GetChannel(x, loadChannelIcons));
         }
 
