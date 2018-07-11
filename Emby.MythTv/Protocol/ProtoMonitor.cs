@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Emby.MythTv.Model;
+using MediaBrowser.Model.Logging;
 
 namespace Emby.MythTv.Protocol
 {
     class ProtoMonitor : ProtoBase
     {
 
-        public ProtoMonitor(string server, int port) : base(server, port)
+        public ProtoMonitor(string server, int port, ILogger logger) : base(server, port, logger)
         {
         }
 
@@ -30,19 +31,6 @@ namespace Emby.MythTv.Protocol
             await Close();
             return false;
 
-        }
-
-        public virtual new async Task<bool> IsOpen()
-        {
-            if (m_hang)
-                return await Open();
-            return base.IsOpen;
-        }
-
-        public override async Task Close()
-        {
-            await base.Close();
-            m_tainted = m_hang = false;
         }
 
         public async Task<List<Input>> GetFreeInputs()

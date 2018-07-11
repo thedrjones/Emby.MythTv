@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MediaBrowser.Model.Logging;
 
 namespace Emby.MythTv.Protocol
 {
     class ProtoPlayback : ProtoBase
     {
 
-        public ProtoPlayback(string server, int port) : base(server, port)
+        public ProtoPlayback(string server, int port, ILogger logger) : base(server, port, logger)
         {
         }
 
@@ -29,12 +30,6 @@ namespace Emby.MythTv.Protocol
 
             await Close();
             return false;
-        }
-
-        public override async Task Close()
-        {
-            await base.Close();
-            m_tainted = m_hang = false;
         }
 
         private async Task<bool> Announce75()

@@ -124,13 +124,6 @@ namespace Emby.MythTv
             
             Plugin.Instance.SaveConfiguration();
 
-            if (_liveTV == null)
-            {
-                _logger.Info("[MythTV] Initiating MythProtocol connection");
-                _liveTV = new LiveTVPlayback(config.Host, 6543);
-                await _liveTV.Open();
-                _logger.Info($"[MythTV] MythProtocol connection opened, protocol version {_liveTV.ProtoVersion}");
-            }
 
             if (config.UseSchedulesDirectImages) {
                 _imageGrabber = new SchedulesDirectImages(_httpClient, _jsonSerializer, _logger);
@@ -513,6 +506,17 @@ namespace Emby.MythTv
             throw new NotImplementedException();
         }
 
+        private async Task ConnectLiveTv()
+        {
+            if (_liveTV == null)
+            {
+                _logger.Info("[MythTV] Initiating MythProtocol connection");
+                _liveTV = new LiveTVPlayback(Plugin.Instance.Configuration.Host, 6543, _logger);
+                await _liveTV.Open();
+                _logger.Info($"[MythTV] MythProtocol connection opened, protocol version {_liveTV.ProtoVersion}");
+            }
+        }
+
         public async Task<MediaSourceInfo> GetChannelStream(string channelId, string mediaSourceId, CancellationToken cancellationToken)
         {
             _logger.Info($"[MythTV] Start ChannelStream for {channelId}");
@@ -520,6 +524,9 @@ namespace Emby.MythTv
             // await GetChannels if channelNums isn't populated
             if (channelNums == null)
                 await GetChannelsAsync(cancellationToken);
+
+            // make sure livetv connected
+            await ConnectLiveTv();
             
             var id = await _liveTV.SpawnLiveTV(channelNums[channelId]);
             if (id == 0)
@@ -619,6 +626,8 @@ namespace Emby.MythTv
         {
             _logger.Info($"[MythTV] Closing {id}");
             await _liveTV.StopLiveTV(int.Parse(id));
+            _liveTV.Dispose();
+            _liveTV = null;
         }
 
         public async Task<SeriesTimerInfo> GetNewTimerDefaultsAsync(CancellationToken cancellationToken, ProgramInfo program = null)

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Emby.MythTv.Model;
+using MediaBrowser.Model.Logging;
 
 namespace Emby.MythTv.Protocol
 {
@@ -13,14 +14,25 @@ namespace Emby.MythTv.Protocol
         private Dictionary<int, ProtoRecorder> m_recorders;
         private int m_idCounter = 0;
 
-        public LiveTVPlayback(string server, int port) : base(server, port)
+        public LiveTVPlayback(string server, int port, ILogger logger) : base(server, port, logger)
         {
             m_recorders = new Dictionary<int, ProtoRecorder>();
         }
 
         ~LiveTVPlayback()
         {
-            Task.WaitAll(Close());
+            Dispose(false);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && m_recorders != null) {
+                foreach (var recorder in m_recorders)
+                    recorder.Value.Dispose();
+                m_recorders = null;
+            }
+
+            base.Dispose(disposing);
         }
 
         public override async Task<bool> Open()
@@ -28,22 +40,15 @@ namespace Emby.MythTv.Protocol
             return await base.Open();
         }
 
-        public override async Task Close()
-        {
-            foreach (var recorder in m_recorders)
-                await recorder.Value.Close();
-            await base.Close();
-        }
-
         public async Task<int> SpawnLiveTV(string chanNum)
         {
-            if (!await IsOpen())
+            if (!IsOpen)
                 return 0;
 
             // just bodge it in and get the first free recorder
             var cards = await GetFreeInputs();
 
-            var recorder = new ProtoRecorder(cards[0].CardId, Server, Port);
+            var recorder = new ProtoRecorder(cards[0].CardId, Server, Port, _logger);
             var chain = new Chain();
 
             if (await recorder.SpawnLiveTV(chain.UID, chanNum))

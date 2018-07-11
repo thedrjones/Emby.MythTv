@@ -6,10 +6,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Emby.MythTv.Model;
+using MediaBrowser.Model.Logging;
 
 namespace Emby.MythTv.Protocol
 {
-    class ProtoBase
+    class ProtoBase : IDisposable
     {
         protected static readonly string DELIMITER = "[]:[]";
 
@@ -27,9 +28,8 @@ namespace Emby.MythTv.Protocol
         public int Port { get; private set; }
         public bool HasHanging { get; private set; }
 
-        protected bool m_hang = false;
-        protected bool m_tainted = false;
-
+        protected ILogger _logger;
+        
         private TcpClient m_socket;
 
         private Dictionary<uint, string> protomap = new Dictionary<uint, string>()
@@ -40,16 +40,33 @@ namespace Emby.MythTv.Protocol
             {88, "XmasGift"}
         };
 
-        public ProtoBase(string server, int port)
+        public ProtoBase(string server, int port, ILogger logger)
         {
             Server = server;
             Port = port;
+            _logger = logger;
             IsOpen = false;
         }
 
         ~ProtoBase()
         {
-            Task.WaitAll(Close());
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing && m_socket != null)
+            {
+                Task.WaitAll(Close());
+                m_socket.Dispose();
+                m_socket = null;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         private string FormatMessage(string message)
@@ -62,6 +79,8 @@ namespace Emby.MythTv.Protocol
         {
 
             string result;
+
+            _logger.Debug($"[MythTV] Sending: {toSend}");
 
             try
             {
@@ -98,8 +117,11 @@ namespace Emby.MythTv.Protocol
             }
             catch (Exception ex)
             {
+                _logger.Debug($"[MythTV] Sending exception: {ex.Message}");
                 throw new Exception(ex.Message, ex);
             }
+
+            _logger.Debug($"[MythTV] Received: {result}");
 
             return result.Split(new[] { DELIMITER }, StringSplitOptions.None).ToList();
         }
@@ -146,11 +168,10 @@ namespace Emby.MythTv.Protocol
         {
             if (m_socket.Connected)
             {
-                if (IsOpen && !m_hang)
+                if (IsOpen)
                 {
                     await SendCommand("DONE");
                 }
-                m_socket.Dispose();
             }
             IsOpen = false;
         }
