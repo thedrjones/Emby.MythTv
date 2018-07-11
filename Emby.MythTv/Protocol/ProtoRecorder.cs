@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Emby.MythTv.Model;
+using MediaBrowser.Model.Logging;
 
 namespace Emby.MythTv.Protocol
 {
@@ -13,7 +14,7 @@ namespace Emby.MythTv.Protocol
         public bool IsPlaying { get; private set; }
         public bool IsLiveRecording { get; private set; }
 
-        public ProtoRecorder(int num, string server, int port) : base(server, port)
+        public ProtoRecorder(int num, string server, int port, ILogger logger) : base(server, port, logger)
         {
             Num = num;
             IsPlaying = false;

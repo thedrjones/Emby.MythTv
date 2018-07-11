@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Emby.MythTv.Model;
+using MediaBrowser.Model.Logging;
 
 namespace Emby.MythTv.Protocol
 {
@@ -29,8 +30,10 @@ namespace Emby.MythTv.Protocol
 
         protected bool m_hang = false;
         protected bool m_tainted = false;
-
+        protected ILogger _logger;
+        
         private TcpClient m_socket;
+
 
         private Dictionary<uint, string> protomap = new Dictionary<uint, string>()
         {
@@ -40,10 +43,11 @@ namespace Emby.MythTv.Protocol
             {88, "XmasGift"}
         };
 
-        public ProtoBase(string server, int port)
+        public ProtoBase(string server, int port, ILogger logger)
         {
             Server = server;
             Port = port;
+            _logger = logger;
             IsOpen = false;
         }
 
@@ -62,6 +66,8 @@ namespace Emby.MythTv.Protocol
         {
 
             string result;
+
+            _logger.Debug($"[MythTV] Sending: {toSend}");
 
             try
             {
@@ -98,8 +104,11 @@ namespace Emby.MythTv.Protocol
             }
             catch (Exception ex)
             {
+                _logger.Debug($"[MythTV] Sending exception: {ex.Message}");
                 throw new Exception(ex.Message, ex);
             }
+
+            _logger.Debug($"[MythTV] Received: {result}");
 
             return result.Split(new[] { DELIMITER }, StringSplitOptions.None).ToList();
         }

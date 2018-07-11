@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Emby.MythTv.Model;
+using MediaBrowser.Model.Logging;
 
 namespace Emby.MythTv.Protocol
 {
     class ProtoMonitor : ProtoBase
     {
 
-        public ProtoMonitor(string server, int port) : base(server, port)
+        public ProtoMonitor(string server, int port, ILogger logger) : base(server, port, logger)
         {
         }
 
