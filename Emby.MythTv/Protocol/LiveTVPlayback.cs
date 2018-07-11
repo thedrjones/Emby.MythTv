@@ -27,8 +27,6 @@ namespace Emby.MythTv.Protocol
         protected override void Dispose(bool disposing)
         {
             if (disposing && m_recorders != null) {
-                Task.WaitAll(Close());
-
                 foreach (var recorder in m_recorders)
                     recorder.Value.Dispose();
                 m_recorders = null;

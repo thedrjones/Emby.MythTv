@@ -30,12 +30,9 @@ namespace Emby.MythTv.Protocol
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && IsPlaying)
             {
-                if (IsPlaying)
-                    Task.WaitAll(StopLiveTV());
-
-                Task.WaitAll(Close());
+                Task.WaitAll(StopLiveTV());
             }
 
             base.Dispose(disposing);
