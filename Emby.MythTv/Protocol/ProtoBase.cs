@@ -10,7 +10,7 @@ using MediaBrowser.Model.Logging;
 
 namespace Emby.MythTv.Protocol
 {
-    class ProtoBase
+    class ProtoBase : IDisposable
     {
         protected static readonly string DELIMITER = "[]:[]";
 
@@ -34,7 +34,6 @@ namespace Emby.MythTv.Protocol
         
         private TcpClient m_socket;
 
-
         private Dictionary<uint, string> protomap = new Dictionary<uint, string>()
         {
             {91, "BuzzOff"},
@@ -54,6 +53,22 @@ namespace Emby.MythTv.Protocol
         ~ProtoBase()
         {
             Task.WaitAll(Close());
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing && m_socket != null)
+            {
+                m_socket.Dispose();
+                m_socket = null;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         private string FormatMessage(string message)
@@ -159,7 +174,6 @@ namespace Emby.MythTv.Protocol
                 {
                     await SendCommand("DONE");
                 }
-                m_socket.Dispose();
             }
             IsOpen = false;
         }

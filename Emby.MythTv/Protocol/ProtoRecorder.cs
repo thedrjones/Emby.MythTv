@@ -29,6 +29,7 @@ namespace Emby.MythTv.Protocol
                 Task.WaitAll(StopLiveTV());
 
             Task.WaitAll(Close());
+            Dispose(false);
         }
 
         public async Task<bool> SpawnLiveTV(string chainid, string channum)
