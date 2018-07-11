@@ -25,11 +25,20 @@ namespace Emby.MythTv.Protocol
 
         ~ProtoRecorder()
         {
-            if (IsPlaying)
-                Task.WaitAll(StopLiveTV());
-
-            Task.WaitAll(Close());
             Dispose(false);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (IsPlaying)
+                    Task.WaitAll(StopLiveTV());
+
+                Task.WaitAll(Close());
+            }
+
+            base.Dispose(disposing);
         }
 
         public async Task<bool> SpawnLiveTV(string chainid, string channum)

@@ -52,7 +52,6 @@ namespace Emby.MythTv.Protocol
 
         ~ProtoBase()
         {
-            Task.WaitAll(Close());
             Dispose(false);
         }
 
@@ -60,6 +59,7 @@ namespace Emby.MythTv.Protocol
         {
             if (disposing && m_socket != null)
             {
+                Task.WaitAll(Close());
                 m_socket.Dispose();
                 m_socket = null;
             }

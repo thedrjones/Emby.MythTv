@@ -21,16 +21,18 @@ namespace Emby.MythTv.Protocol
 
         ~LiveTVPlayback()
         {
-            Task.WaitAll(Close());
             Dispose(false);
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && m_recorders != null)
+            if (disposing && m_recorders != null) {
+                Task.WaitAll(Close());
+
                 foreach (var recorder in m_recorders)
                     recorder.Value.Dispose();
-            m_recorders = null;
+                m_recorders = null;
+            }
 
             base.Dispose(disposing);
         }
