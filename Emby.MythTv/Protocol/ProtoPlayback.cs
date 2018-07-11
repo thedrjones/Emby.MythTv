@@ -32,12 +32,6 @@ namespace Emby.MythTv.Protocol
             return false;
         }
 
-        public override async Task Close()
-        {
-            await base.Close();
-            m_tainted = m_hang = false;
-        }
-
         private async Task<bool> Announce75()
         {
             var result = await SendCommand("ANN Playback emby 0");

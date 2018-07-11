@@ -28,8 +28,6 @@ namespace Emby.MythTv.Protocol
         public int Port { get; private set; }
         public bool HasHanging { get; private set; }
 
-        protected bool m_hang = false;
-        protected bool m_tainted = false;
         protected ILogger _logger;
         
         private TcpClient m_socket;
@@ -170,7 +168,7 @@ namespace Emby.MythTv.Protocol
         {
             if (m_socket.Connected)
             {
-                if (IsOpen && !m_hang)
+                if (IsOpen)
                 {
                     await SendCommand("DONE");
                 }

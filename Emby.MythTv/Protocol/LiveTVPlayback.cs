@@ -51,7 +51,7 @@ namespace Emby.MythTv.Protocol
 
         public async Task<int> SpawnLiveTV(string chanNum)
         {
-            if (!await IsOpen())
+            if (!IsOpen)
                 return 0;
 
             // just bodge it in and get the first free recorder

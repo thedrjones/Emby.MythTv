@@ -33,19 +33,6 @@ namespace Emby.MythTv.Protocol
 
         }
 
-        public virtual new async Task<bool> IsOpen()
-        {
-            if (m_hang)
-                return await Open();
-            return base.IsOpen;
-        }
-
-        public override async Task Close()
-        {
-            await base.Close();
-            m_tainted = m_hang = false;
-        }
-
         public async Task<List<Input>> GetFreeInputs()
         {
             if (ProtoVersion >= 91) return await GetFreeInputs91();
