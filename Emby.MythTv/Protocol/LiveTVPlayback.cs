@@ -40,13 +40,6 @@ namespace Emby.MythTv.Protocol
             return await base.Open();
         }
 
-        public override async Task Close()
-        {
-            foreach (var recorder in m_recorders)
-                await recorder.Value.Close();
-            await base.Close();
-        }
-
         public async Task<int> SpawnLiveTV(string chanNum)
         {
             if (!IsOpen)
