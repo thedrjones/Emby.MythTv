@@ -229,7 +229,6 @@ namespace Emby.MythTv
         {
             var path = string.IsNullOrEmpty(item.Path) ? item.Url : item.Path;
 
-            _logger.Info($"[MythTV] {item.Name}: {item.EpisodeTitle}");
             var channelItem = new ChannelItemInfo
             {
                 Name = string.IsNullOrEmpty(item.EpisodeTitle) ? item.Name : item.EpisodeTitle,
