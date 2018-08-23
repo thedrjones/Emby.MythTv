@@ -277,6 +277,7 @@ namespace Emby.MythTv.Responses
             var root = json.DeserializeFromStream<ProgramListRoot>(stream);
             return root.ProgramList.Programs
                 .Where(i => included.Contains(i.Recording.RecGroup))
+                .Where(i => i.FileSize > 0)
                 .Select(i => ProgramToRecordingInfo(i, fileSystem));
 
         }
