@@ -218,10 +218,19 @@ namespace Emby.MythTv
             _logger.Info("[MythTV] Start GetRecordings Async, retrieve all 'Pending', 'Inprogress' and 'Completed' recordings ");
             await EnsureSetup();
 
+            IEnumerable<RecordingInfo> outp;
+
             using (var stream = await _httpClient.Get(GetOptions(cancellationToken, "/Dvr/GetRecordedList")).ConfigureAwait(false))
             {
-                return new DvrResponse(Plugin.Instance.Configuration.StorageGroupMaps).GetRecordings(stream, _jsonSerializer, _logger, _fileSystem);
+                outp = new DvrResponse(Plugin.Instance.Configuration.StorageGroupMaps).GetRecordings(stream, _jsonSerializer, _logger, _fileSystem).ToList();
             }
+
+            if (_imageGrabber != null)
+            {
+                await _imageGrabber.AddImages(outp, cancellationToken);
+            }
+
+            return outp;
 
         }
 
@@ -681,7 +690,7 @@ namespace Emby.MythTv
 
             if (_imageGrabber != null)
             {
-                programs = await _imageGrabber.AddImages(programs, cancellationToken);
+                await _imageGrabber.AddImages(programs, cancellationToken);
             }
 
             return programs;
