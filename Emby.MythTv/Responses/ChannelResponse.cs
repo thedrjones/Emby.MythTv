@@ -1,14 +1,10 @@
 ﻿using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Controller.LiveTv;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Emby.MythTv.Helpers;
 using Emby.MythTv.Model;
 
 namespace Emby.MythTv.Responses

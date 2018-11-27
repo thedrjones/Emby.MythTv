@@ -1,15 +1,12 @@
 using Emby.MythTv.Model;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.LiveTv;
-using MediaBrowser.Model.LiveTv;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Net;
 using MediaBrowser.Model.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
