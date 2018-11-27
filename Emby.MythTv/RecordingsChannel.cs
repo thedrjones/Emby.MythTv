@@ -247,7 +247,11 @@ namespace Emby.MythTv
                     {
                         Path = path,
                         Protocol = path.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? MediaProtocol.Http : MediaProtocol.File,
-                        Id = item.Id
+                        Id = item.Id,
+                        SupportsProbing = !(item.Status == RecordingStatus.InProgress),
+                        IsInfiniteStream = item.Status == RecordingStatus.InProgress,
+                        ReadAtNativeFramerate = item.Status == RecordingStatus.InProgress,
+                        RunTimeTicks = (item.EndDate - item.StartDate).Ticks
                     }
                 },
                 //ParentIndexNumber = item.ParentIndexNumber,
