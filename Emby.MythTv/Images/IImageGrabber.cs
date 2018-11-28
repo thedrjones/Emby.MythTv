@@ -5,9 +5,16 @@ using System.Threading.Tasks;
 
 namespace Emby.MythTv
 {
-
     public interface IImageGrabber
     {
-        Task<IEnumerable<ProgramInfo>> AddImages(IEnumerable<ProgramInfo> programs, CancellationToken cancellationToken);
+        Task AddImages(IEnumerable<ProgramInfo> programs, CancellationToken cancellationToken);
+        Task AddImages(IEnumerable<RecordingInfo> programs, CancellationToken cancellationToken);
+    }
+
+    public class Images
+    {
+        public string Image {get; set;}
+        public string Thumb {get; set;}
+        public string Backdrop {get; set;}
     }
 }

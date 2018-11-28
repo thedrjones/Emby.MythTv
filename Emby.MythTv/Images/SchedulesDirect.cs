@@ -1,15 +1,12 @@
 using Emby.MythTv.Model;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.LiveTv;
-using MediaBrowser.Model.LiveTv;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Net;
 using MediaBrowser.Model.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,45 +29,82 @@ namespace Emby.MythTv
             _jsonSerializer = jsonSerializer;
             _logger = logger;
         }
-        
-        public async Task<IEnumerable<ProgramInfo>> AddImages(IEnumerable<ProgramInfo> programs, CancellationToken cancellationToken)
+
+        public async Task AddImages(IEnumerable<ProgramInfo> programs, CancellationToken cancellationToken)
         {
             // get all images
             var progIds = programs.Select(p => p.ShowId).ToList();
-            _logger.Info($"[MythTV] Fetching SchedulesDirect images");
             var images = await GetImageForPrograms(progIds, cancellationToken).ConfigureAwait(false);
+            
+            if (images == null)
+                return;
 
-            foreach (ProgramInfo program in programs)
+            foreach (var program in programs)
             {
-                if (images != null)
+                var progImages = FilterImages(images, program.ShowId.Substring(0,10));
+
+                program.ImageUrl = progImages.Image;
+                program.ThumbImageUrl = progImages.Thumb;
+                program.BackdropImageUrl = progImages.Backdrop;
+            }
+        }
+
+        public async Task AddImages(IEnumerable<RecordingInfo> programs, CancellationToken cancellationToken)
+        {
+            _logger.Debug($"[MythTV] Add images");
+            var progIds = programs.Select(p => p.ShowId).ToList();
+            var images = await GetImageForPrograms(progIds, cancellationToken).ConfigureAwait(false);
+            
+            if (images == null)
+                return;
+
+            _logger.Debug($"[MythTV] Got images");
+
+            foreach (var program in programs)
+            {
+                if (program.ImageUrl != null)
+                    continue;
+                
+                _logger.Debug($"[MythTV] Fetching SchedulesDirect images for recording {program.ShowId}");
+                var progImages = FilterImages(images, program.ShowId.Substring(0,10));
+
+                program.ImageUrl = progImages.Image;
+            }
+        }            
+
+        private Images FilterImages(List<ScheduleDirect.ShowImages> images, string programID)
+        {
+
+            var imageIndex = images.FindIndex(i => i.programID == programID);
+            Images outp = new Images();
+
+            if (imageIndex > -1)
+            {
+                var allImages = (images[imageIndex].data ?? new List<ScheduleDirect.ImageData>()).ToList();
+                var imagesWithText = allImages.Where(i => string.Equals(i.text, "yes", StringComparison.OrdinalIgnoreCase)).ToList();
+                var imagesWithoutText = allImages.Where(i => string.Equals(i.text, "no", StringComparison.OrdinalIgnoreCase)).ToList();
+
+                double desiredAspect = 0.666666667;
+                double wideAspect = 1.77777778;
+
+                outp.Image = GetProgramImage(ApiUrl, imagesWithText, true, desiredAspect) ??
+                    GetProgramImage(ApiUrl, allImages, true, desiredAspect);
+
+                _logger.Debug($"[MythTV] Found Schedules Direct Image for {programID}: {outp.Image}");
+
+                outp.Thumb = GetProgramImage(ApiUrl, imagesWithText, true, wideAspect);
+
+                // Don't supply the same image twice
+                if (string.Equals(outp.Image, outp.Thumb, StringComparison.Ordinal))
                 {
-                    var imageIndex = images.FindIndex(i => i.programID == program.ShowId.Substring(0, 10));
-                    if (imageIndex > -1)
-                    {
-                        var allImages = (images[imageIndex].data ?? new List<ScheduleDirect.ImageData>()).ToList();
-                        var imagesWithText = allImages.Where(i => string.Equals(i.text, "yes", StringComparison.OrdinalIgnoreCase)).ToList();
-                        var imagesWithoutText = allImages.Where(i => string.Equals(i.text, "no", StringComparison.OrdinalIgnoreCase)).ToList();
-
-                        double desiredAspect = 0.666666667;
-                        double wideAspect = 1.77777778;
-
-                        program.ImageUrl = GetProgramImage(ApiUrl, imagesWithText, true, desiredAspect) ??
-                            GetProgramImage(ApiUrl, allImages, true, desiredAspect);
-
-                        program.ThumbImageUrl = GetProgramImage(ApiUrl, imagesWithText, true, wideAspect);
-
-                        // Don't supply the same image twice
-                        if (string.Equals(program.ImageUrl, program.ThumbImageUrl, StringComparison.Ordinal))
-                        {
-                            program.ThumbImageUrl = null;
-                        }
-
-                        program.BackdropImageUrl = GetProgramImage(ApiUrl, imagesWithoutText, true, wideAspect);
-                    }
+                    outp.Thumb = null;
                 }
+
+                outp.Backdrop = GetProgramImage(ApiUrl, imagesWithoutText, true, wideAspect);
             }
 
-            return programs;
+            return outp;
+
         }
 
         private async Task<HttpResponseInfo> Post(HttpRequestOptions options,
@@ -169,10 +203,11 @@ namespace Emby.MythTv
             return result;
         }
 
-        private async Task<List<ScheduleDirect.ShowImages>> GetImageForPrograms(
-                                                                                List<string> programIds,
+        private async Task<List<ScheduleDirect.ShowImages>> GetImageForPrograms(List<string> programIds,
                                                                                 CancellationToken cancellationToken)
         {
+            _logger.Debug($"[MythTV] Fetching SchedulesDirect images");
+            
             if (programIds.Count == 0)
             {
                 return new List<ScheduleDirect.ShowImages>();

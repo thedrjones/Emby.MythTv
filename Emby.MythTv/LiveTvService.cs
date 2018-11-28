@@ -2,25 +2,17 @@
 using Emby.MythTv.Responses;
 using Emby.MythTv.Protocol;
 using Emby.MythTv.Model;
-using MediaBrowser.Common.Extensions;
 using MediaBrowser.Common.Net;
-using MediaBrowser.Controller.Drawing;
 using MediaBrowser.Controller.LiveTv;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.LiveTv;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.MediaInfo;
-using MediaBrowser.Model.Net;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.IO;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -218,10 +210,19 @@ namespace Emby.MythTv
             _logger.Info("[MythTV] Start GetRecordings Async, retrieve all 'Pending', 'Inprogress' and 'Completed' recordings ");
             await EnsureSetup();
 
+            IEnumerable<RecordingInfo> outp;
+
             using (var stream = await _httpClient.Get(GetOptions(cancellationToken, "/Dvr/GetRecordedList")).ConfigureAwait(false))
             {
-                return new DvrResponse(Plugin.Instance.Configuration.StorageGroupMaps).GetRecordings(stream, _jsonSerializer, _logger, _fileSystem);
+                outp = new DvrResponse(Plugin.Instance.Configuration.StorageGroupMaps).GetRecordings(stream, _jsonSerializer, _logger, _fileSystem).ToList();
             }
+
+            if (_imageGrabber != null)
+            {
+                await _imageGrabber.AddImages(outp, cancellationToken);
+            }
+
+            return outp;
 
         }
 
@@ -501,11 +502,6 @@ namespace Emby.MythTv
             throw new NotImplementedException();
         }
 
-        public Task<List<MediaSourceInfo>> GetRecordingStreamMediaSources(string recordingId, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
         private async Task ConnectLiveTv()
         {
             if (_liveTV == null)
@@ -569,59 +565,6 @@ namespace Emby.MythTv
             return output;
         }
 
-        public async Task<MediaSourceInfo> GetRecordingStream(string recordingId, string mediaSourceId, CancellationToken cancellationToken)
-        {
-            _logger.Info("[MythTV] Start GetRecordingStream");
-            var recordings = await GetRecordingsAsync(cancellationToken).ConfigureAwait(false);
-            var recording = recordings.First(i => string.Equals(i.Id, recordingId, StringComparison.OrdinalIgnoreCase));
-
-            var output = new MediaSourceInfo
-                {
-                    MediaStreams = new List<MediaStream>
-                    {
-                        new MediaStream
-                        {
-                            Type = MediaStreamType.Video,
-                            // Set the index to -1 because we don't know the exact index of the video stream within the container
-                            Index = -1,
-
-                            // Set to true if unknown to enable deinterlacing
-                            IsInterlaced = true
-                        },
-                        new MediaStream
-                        {
-                            Type = MediaStreamType.Audio,
-                            // Set the index to -1 because we don't know the exact index of the audio stream within the container
-                            Index = -1,
-
-                            // Set to true if unknown to enable deinterlacing
-                            IsInterlaced = true
-                        }
-                    }
-                };
-
-            if (!string.IsNullOrEmpty(recording.Path) && File.Exists(recording.Path))
-            {
-                _logger.Info("[MythTV] RecordingPath: {0}", recording.Path);
-                output.Path = recording.Path;
-                output.Protocol = MediaProtocol.File;
-
-                return output;
-            }
-
-            if (!string.IsNullOrEmpty(recording.Url))
-            {
-                _logger.Info("[MythTV] RecordingUrl: {0}", recording.Url);
-                output.Path = recording.Url;
-                output.Protocol = MediaProtocol.Http;
-
-                return output;
-            }
-
-            _logger.Error("[MythTV] No stream exists for recording {0}", recording);
-            throw new ResourceNotFoundException(string.Format("No stream exists for recording {0}", recording));
-        }
-
         public async Task CloseLiveStream(string id, CancellationToken cancellationToken)
         {
             _logger.Info($"[MythTV] Closing {id}");
@@ -681,7 +624,7 @@ namespace Emby.MythTv
 
             if (_imageGrabber != null)
             {
-                programs = await _imageGrabber.AddImages(programs, cancellationToken);
+                await _imageGrabber.AddImages(programs, cancellationToken);
             }
 
             return programs;
@@ -694,39 +637,6 @@ namespace Emby.MythTv
 
         public event EventHandler DataSourceChanged;
 
-        public event EventHandler<RecordingStatusChangedEventArgs> RecordingStatusChanged;
-
-        public async Task<LiveTvServiceStatusInfo> GetStatusInfoAsync(CancellationToken cancellationToken)
-        {
-            await EnsureSetup();
-            
-            bool upgradeAvailable = false;
-            string serverVersion = string.Empty;
-
-            var backendInfoTask = _httpClient.Get(GetOptions(cancellationToken, "/Myth/GetBackendInfo")).ConfigureAwait(false);
-            var tunersTask = _httpClient.Get(GetOptions(cancellationToken, "/Dvr/GetEncoderList")).ConfigureAwait(false);
-
-            List<LiveTvTunerInfo> tvTunerInfos;
-            using (var tunerStream = await tunersTask)
-            {
-                tvTunerInfos = new DvrResponse().GetTuners(tunerStream, _jsonSerializer, _logger);
-            }
-
-            using (var stream = await backendInfoTask)
-            {
-                serverVersion = MythResponse.GetVersion(stream, _jsonSerializer, _logger);
-            }
-            
-            //Tuner information
-
-            return new LiveTvServiceStatusInfo
-            {
-                HasUpdateAvailable = upgradeAvailable,
-                Version = serverVersion,
-                Tuners = tvTunerInfos
-            };
-        }
-
         public string HomePageUrl
         {
             get { return "http://www.mythtv.org/"; }
@@ -736,25 +646,5 @@ namespace Emby.MythTv
         {
             throw new NotImplementedException();
         }
-
-        public Task<ImageStream> GetChannelImageAsync(string channelId, CancellationToken cancellationToken)
-        {
-            // Leave as is. This is handled by supplying image url to ChannelInfo
-            throw new NotImplementedException();
-        }
-
-        public Task<ImageStream> GetProgramImageAsync(string programId, string channelId, CancellationToken cancellationToken)
-        {
-            // Leave as is. This is handled by supplying image url to ProgramInfo
-            throw new NotImplementedException();
-        }
-
-        public Task<ImageStream> GetRecordingImageAsync(string recordingId, CancellationToken cancellationToken)
-        {
-            // Leave as is. This is handled by supplying image url to RecordingInfo
-            throw new NotImplementedException();
-        }
-
     }
-
 }
