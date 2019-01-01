@@ -177,24 +177,28 @@ namespace Emby.MythTv.Protocol
 
         protected Program RcvProgramInfo86(List<string> fields)
         {
-            var program = new Program();
-            program.Recording = new Recording();
-            program.Title = fields[0];
-            program.SubTitle = fields[1];
-            program.Description = fields[2];
-            program.Season = int.Parse(fields[3]);
-            program.Episode = int.Parse(fields[4]);
-            program.Category = fields[7];
-            program.FileName = fields[12];
-            program.FileSize = long.Parse(fields[13]);
-            program.StartTime = UnixTimeStampToDateTime(int.Parse(fields[14]));
-            program.EndTime = UnixTimeStampToDateTime(int.Parse(fields[15]));
-            program.Recording.StorageGroup = fields[41];
-            _logger.Debug($"[MythTV] StorageGroup: {program.Recording.StorageGroup}");
+            var program = new Program {
+                Title = fields[0],
+                SubTitle = fields[1],
+                Description = fields[2],
+                Season = int.Parse(fields[3]),
+                Episode = int.Parse(fields[4]),
+                Category = fields[7],
+                FileName = fields[12],
+                FileSize = long.Parse(fields[13]),
+                StartTime = UnixTimeStampToDateTime(int.Parse(fields[14])),
+                EndTime = UnixTimeStampToDateTime(int.Parse(fields[15])),
+                HostName = fields[17],
+                Recording = new Recording {
+                    StorageGroup = fields[41]
+                }
+            };
+            
+            _logger.Debug($"[MythTV] StorageGroup: {program.HostName}/{program.Recording.StorageGroup}");
             return program;
         }
 
-        private static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+        protected static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
         {
             // Unix timestamp is seconds past epoch
             DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);

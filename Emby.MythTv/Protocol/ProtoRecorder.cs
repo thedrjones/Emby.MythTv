@@ -78,11 +78,18 @@ namespace Emby.MythTv.Protocol
             return RcvProgramInfo86(result);
         }
 
-        public async Task<int> QueryFileSize65(string filename, string storageGroup = "default")
+        public async Task<StorageGroupFile> QuerySGFile75(string hostname, string storageGroup, string filename)
         {
-            var cmd = $"QUERY_FILE_EXISTS{DELIMITER}{filename}{DELIMITER}{storageGroup}";
+            var cmd = $"QUERY_SG_FILEQUERY{DELIMITER}{hostname}{DELIMITER}{storageGroup}{DELIMITER}{filename}";
             var result = await SendCommand(cmd);
-            return int.Parse(result[9]);
+
+            return new StorageGroupFile {
+                FileName = result[0],
+                StorageGroup = storageGroup,
+                HostName = hostname,
+                LastModified = UnixTimeStampToDateTime(int.Parse(result[1])),
+                Size = long.Parse(result[2])
+            };
         }
     }
 }

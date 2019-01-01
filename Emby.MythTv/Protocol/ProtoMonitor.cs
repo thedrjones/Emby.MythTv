@@ -137,7 +137,7 @@ namespace Emby.MythTv.Protocol
             if (input.Count == 0)
                 return output;
 
-            // each card has 11 fields
+            // each card has 10 fields
             if (input.Count % 10 != 0)
                 throw new Exception("Expected multiple of 10 fields in GET_FREE_INPUT_INFO response");
 

@@ -64,20 +64,18 @@ namespace Emby.MythTv.Protocol
         public async Task<string> GetCurrentRecording(int id, List<StorageGroupMap> groups)
         {
             var recorder = m_recorders[id];
-            int fileSize = 0;
-            Program program = null;
-            string fileName;
-
+            
+            StorageGroupFile file = null;
             do
             {
-                program = await recorder.GetCurrentRecording75();
-                fileName = program.FileName.Split('/').Last();
-                fileSize = await recorder.QueryFileSize65(fileName, program.Recording.StorageGroup);
+                var program = await recorder.GetCurrentRecording75();
+                file = await recorder.QuerySGFile75(program.HostName, program.Recording.StorageGroup, program.FileName);
                 await Task.Delay(500);
             }
-            while (fileSize == 0);
-            
-            return Path.Combine(groups.SingleOrDefault(x => x.GroupName == program.Recording.StorageGroup).DirNameEmby, fileName);
+            while (file.Size == 0);
+
+            var map = groups.SingleOrDefault(x => x.GroupName == file.StorageGroup);
+            return file.FileName.Replace(map.DirName, map.DirNameEmby);
         }
 
         public async Task StopLiveTV(int id)

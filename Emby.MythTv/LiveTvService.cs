@@ -91,6 +91,14 @@ namespace Emby.MythTv
                             DirNameEmby = x.DirName
                         }));
             }
+
+            // make sure there are no trailing path separators
+            foreach (var group in storageGroupMaps)
+            {
+                group.DirName = group.DirName.TrimEnd('/');
+                group.DirNameEmby = group.DirNameEmby.TrimEnd('/');
+            }
+            
             Plugin.Instance.Configuration.StorageGroupMaps = storageGroupMaps;
 
             List<string> recGroupNames;
