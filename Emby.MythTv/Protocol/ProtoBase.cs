@@ -178,6 +178,7 @@ namespace Emby.MythTv.Protocol
         protected Program RcvProgramInfo86(List<string> fields)
         {
             var program = new Program();
+            program.Recording = new Recording();
             program.Title = fields[0];
             program.SubTitle = fields[1];
             program.Description = fields[2];
@@ -188,6 +189,8 @@ namespace Emby.MythTv.Protocol
             program.FileSize = long.Parse(fields[13]);
             program.StartTime = UnixTimeStampToDateTime(int.Parse(fields[14]));
             program.EndTime = UnixTimeStampToDateTime(int.Parse(fields[15]));
+            program.Recording.StorageGroup = fields[41];
+            _logger.Debug($"[MythTV] StorageGroup: {program.Recording.StorageGroup}");
             return program;
         }
 
