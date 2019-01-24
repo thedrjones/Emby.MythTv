@@ -137,7 +137,7 @@ namespace Emby.MythTv
             if (!string.IsNullOrWhiteSpace(requestContent))
             {
                 options.RequestContentType = "application/x-www-form-urlencoded";
-                options.RequestContent = requestContent;
+                options.RequestContent = requestContent.ToCharArray();
             }
 
             return options;
@@ -407,7 +407,7 @@ namespace Emby.MythTv
             return GetOptions(cancellationToken, url);
         }
 
-        private HttpRequestOptions GetRuleStreamOptions(string Id, CancellationToken cancellationToken)
+        private HttpRequestOptions GetRuleStreamOptions(string Id, DateTimeOffset startDate, CancellationToken cancellationToken)
         {
             var url = $"/Dvr/GetRecordSchedule?RecordId={Id}";
 
@@ -452,7 +452,7 @@ namespace Emby.MythTv
 
             await EnsureSetup();
 
-            var options = GetRuleStreamOptions(info.Id, cancellationToken);
+            var options = GetRuleStreamOptions(info.Id, info.StartDate, cancellationToken);
             using (var stream = await _httpClient.Get(options))
             {
                 var json = new DvrResponse().GetNewSeriesTimerJson(info, stream, _jsonSerializer, _logger);
@@ -475,7 +475,7 @@ namespace Emby.MythTv
 
             await EnsureSetup();
 
-            var options = GetRuleStreamOptions(info.Id, cancellationToken);
+            var options = GetRuleStreamOptions(info.Id, info.StartDate,cancellationToken);
             using (var stream = await _httpClient.Get(options))
             {
                 var json = new DvrResponse().GetNewTimerJson(info, stream, _jsonSerializer, _logger);
@@ -653,6 +653,26 @@ namespace Emby.MythTv
         public Task ResetTuner(string id, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<ProgramInfo>> GetProgramsAsync(string channelId, DateTimeOffset startDateUtc, DateTimeOffset endDateUtc, CancellationToken cancellationToken)
+        {
+            _logger.Info("[MythTV] Start GetPrograms Async, retrieve programs for: {0}", channelId);
+
+            await CacheGuideResponse(startDateUtc.DateTime, endDateUtc.DateTime, cancellationToken);
+            IEnumerable<ProgramInfo> programs;
+
+            using (var releaser = await _guideLock.LockAsync())
+            {
+                programs = _guide.GetPrograms(channelId, _logger).ToList();
+            }
+
+            if (_imageGrabber != null)
+            {
+                await _imageGrabber.AddImages(programs, cancellationToken);
+            }
+
+            return programs;
         }
     }
 }
