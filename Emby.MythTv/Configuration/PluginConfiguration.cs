@@ -23,8 +23,8 @@ namespace Emby.MythTv.Configuration
 
         public PluginConfiguration()
         {
-            Host = "192.168.0.18";
-            Pin = "5432";
+            Host = "";
+            Pin = "";
             LoadChannelIcons = false;
             UseSchedulesDirectImages = false;
             StorageGroupMaps = new List<StorageGroupMap>();
