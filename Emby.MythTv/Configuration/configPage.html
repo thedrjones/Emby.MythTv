@@ -16,6 +16,11 @@
             <div class="fieldDescription">MythTV backend host IP.</div>
           </div>
 
+          <div class="inputContainer">
+            <input is="emby-input" id="txtPin" label="MythTV Pin:" autocomplete="off" />
+            <div class="fieldDescription">MythTV services pin (not used yet).</div>
+          </div>
+
           <div class="checkboxContainer checkboxContainer-withDescription">
             <label>
               <input type="checkbox" is="emby-checkbox" id="chkLoadChannelIcons" />
@@ -71,8 +76,9 @@
             ApiClient.getPluginConfiguration(MythTvConfigurationPage.pluginUniqueId).then(function (config) {
               
               $('#txtHost', page).val(config.Host || "");
-              $('#chkLoadChannelIcons', page).checked(config.LoadChannelIcons || false).checkboxradio("refresh");
-              $('#chkUseSchedulesDirectImages', page).checked(config.UseSchedulesDirectImages || false).checkboxradio("refresh");
+              $('#txtPin',page).val(config.Pin || "");
+              page.querySelector('#chkLoadChannelIcons').checked = config.LoadChannelIcons || false;
+              page.querySelector('#chkUseSchedulesDirectImages').checked = config.UseSchedulesDirectImages || false;
 
               MythTvConfigurationPage.storageGroups = config.StorageGroupMaps;
               MythTvConfigurationPage.recGroups = config.RecGroups;
@@ -142,7 +148,7 @@
 
             for (var ndx = 0; ndx < MythTvConfigurationPage.recGroups.length; ndx++) {            
               var group = MythTvConfigurationPage.recGroups[ndx];
-              $('#chkRecGroup' + ndx, page).checked(group.Enabled || false).checkboxradio("refresh");
+              page.querySelector('#chkRecGroup' + ndx).checked = group.Enabled || false;
             }
             
           },
@@ -177,14 +183,15 @@
             var page = $($.mobile.activePage)[0];
 
             for (var ndx = 0; ndx < MythTvConfigurationPage.recGroups.length; ndx++) {            
-              MythTvConfigurationPage.recGroups[ndx].Enabled = $('#chkRecGroup' + ndx, page).checked();
+              MythTvConfigurationPage.recGroups[ndx].Enabled = page.querySelector('#chkRecGroup' + ndx).checked;
             }
             
             ApiClient.getPluginConfiguration(MythTvConfigurationPage.pluginUniqueId).then(function (config) {
 
               config.Host = $('#txtHost', page).val();
-              config.LoadChannelIcons = $('#chkLoadChannelIcons', page).checked();
-              config.UseSchedulesDirectImages = $('#chkUseSchedulesDirectImages', page).checked();
+              config.Pin = $('#txtPin', page).val();
+              config.LoadChannelIcons = page.querySelector('#chkLoadChannelIcons').checked;
+              config.UseSchedulesDirectImages = page.querySelector('#chkUseSchedulesDirectImages').checked;
               config.StorageGroupMaps = MythTvConfigurationPage.storageGroups;
               config.RecGroups = MythTvConfigurationPage.recGroups;
 

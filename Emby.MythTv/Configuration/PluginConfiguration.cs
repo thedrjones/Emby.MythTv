@@ -1,9 +1,5 @@
 ﻿using MediaBrowser.Model.Plugins;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Emby.MythTv.Model;
 
 namespace Emby.MythTv.Configuration
@@ -21,12 +17,14 @@ namespace Emby.MythTv.Configuration
         }
         public bool LoadChannelIcons { get; set; }
         public bool UseSchedulesDirectImages { get; set; }
+        public string Pin {get;set;}
         public List<StorageGroupMap> StorageGroupMaps { get; set; }
         public List<RecGroup> RecGroups { get; set; }
 
         public PluginConfiguration()
         {
-            Host = "";
+            Host = "192.168.0.18";
+            Pin = "5432";
             LoadChannelIcons = false;
             UseSchedulesDirectImages = false;
             StorageGroupMaps = new List<StorageGroupMap>();

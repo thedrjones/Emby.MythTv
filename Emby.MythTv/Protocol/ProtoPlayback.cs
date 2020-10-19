@@ -6,7 +6,7 @@ namespace Emby.MythTv.Protocol
     class ProtoPlayback : ProtoBase
     {
 
-        public ProtoPlayback(string server, int port, ILogger logger) : base(server, port, logger)
+        public ProtoPlayback(string server, int port, string pin, ILogger logger) : base(server, port, pin, logger)
         {
         }
 

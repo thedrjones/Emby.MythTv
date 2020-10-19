@@ -9,7 +9,7 @@ namespace Emby.MythTv.Protocol
     class ProtoMonitor : ProtoBase
     {
 
-        public ProtoMonitor(string server, int port, ILogger logger) : base(server, port, logger)
+        public ProtoMonitor(string server, int port, string pin, ILogger logger) : base(server, port, pin, logger)
         {
         }
 

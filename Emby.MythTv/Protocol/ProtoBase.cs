@@ -25,6 +25,7 @@ namespace Emby.MythTv.Protocol
         public uint ProtoVersion { get; private set; }
         public string Server { get; private set; }
         public int Port { get; private set; }
+        public string Pin {get; private set;}
         public bool HasHanging { get; private set; }
 
         protected ILogger _logger;
@@ -39,10 +40,11 @@ namespace Emby.MythTv.Protocol
             {88, "XmasGift"}
         };
 
-        public ProtoBase(string server, int port, ILogger logger)
+        public ProtoBase(string server, int port, string pin, ILogger logger)
         {
             Server = server;
             Port = port;
+            Pin = pin;
             _logger = logger;
             IsOpen = false;
         }

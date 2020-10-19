@@ -515,7 +515,7 @@ namespace Emby.MythTv
             if (_liveTV == null)
             {
                 _logger.Info("[MythTV] Initiating MythProtocol connection");
-                _liveTV = new LiveTVPlayback(Plugin.Instance.Configuration.Host, 6543, _logger);
+                _liveTV = new LiveTVPlayback(Plugin.Instance.Configuration.Host, 6543, Plugin.Instance.Configuration.Pin ,_logger);
                 await _liveTV.Open();
                 _logger.Info($"[MythTV] MythProtocol connection opened, protocol version {_liveTV.ProtoVersion}");
             }
@@ -545,7 +545,6 @@ namespace Emby.MythTv
                 Id = id.ToString(),
                 Path = filepath,
                 Protocol = MediaProtocol.File,
-                ReadAtNativeFramerate = true,
                 MediaStreams = new List<MediaStream>
                 {
                     new MediaStream

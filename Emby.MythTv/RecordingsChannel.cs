@@ -11,6 +11,7 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Controller.LiveTv;
 using System.Linq;
 using MediaBrowser.Common.Extensions;
+using MediaBrowser.Common;
 using MediaBrowser.Model.Dto;
 using System.Globalization;
 using MediaBrowser.Controller.Entities;
@@ -18,16 +19,47 @@ using MediaBrowser.Model.LiveTv;
 
 namespace Emby.MythTv
 {
-    public class RecordingsChannel : IChannel, IHasCacheKey, ISupportsDelete, ISupportsLatestMedia, ISupportsMediaProbe, IHasFolderAttributes
+    public class RecordingsChannel : IChannel, IHasCacheKey, ISupportsDelete, ISupportsLatestMedia, ISupportsMediaProbe, IHasFolderAttributes, IHasChangeEvent, IDisposable
     {
         public ILiveTvManager _liveTvManager;
         public readonly ILogger _logger;
+
+        public event EventHandler ContentChanged;
+
+        private Timer _updateTimer;
+
+        public void OnContentChanged()
+        {
+            if (ContentChanged != null)
+            {
+                ContentChanged(this, EventArgs.Empty);
+            }
+        }
+
+        private void OnUpdateTimerCallback(object state)
+        {
+            OnContentChanged();
+        }
+
+
 
         public RecordingsChannel(ILiveTvManager liveTvManager, ILogger logger)
         {
             _liveTvManager = liveTvManager;
             _logger = logger;
             _logger.Info("[MythTV] Initiating RecordingsChannel");
+
+            var interval = TimeSpan.FromMinutes(15);
+            _updateTimer = new Timer (OnUpdateTimerCallback,null, interval, interval);
+        }
+
+        public void Dispose()
+        {
+            if (_updateTimer !=null)
+            {
+                _updateTimer.Dispose();
+                _updateTimer = null;
+            }
         }
 
         public string Name
@@ -50,7 +82,7 @@ namespace Emby.MythTv
         {
             get
             {
-                return new []{ "Recordings" };
+                return new[] { "Recordings" };
             }
         }
 
@@ -156,13 +188,6 @@ namespace Emby.MythTv
             return GetService().DeleteRecordingAsync(id, cancellationToken);
         }
 
-        public async Task<IEnumerable<ChannelItemInfo>> GetLatestMedia(ChannelLatestMediaSearch request, CancellationToken cancellationToken)
-        {
-            var result = await GetChannelItems(new InternalChannelItemQuery(), i => true, cancellationToken).ConfigureAwait(false);
-
-            return result.Items.OrderByDescending(i => i.DateCreated ?? DateTime.MinValue);
-        }
-
         public Task<ChannelItemResult> GetChannelItems(InternalChannelItemQuery query, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(query.FolderId))
@@ -248,9 +273,7 @@ namespace Emby.MythTv
                         Path = path,
                         Protocol = path.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? MediaProtocol.Http : MediaProtocol.File,
                         Id = item.Id,
-                        SupportsProbing = !(item.Status == RecordingStatus.InProgress),
                         IsInfiniteStream = item.Status == RecordingStatus.InProgress,
-                        ReadAtNativeFramerate = item.Status == RecordingStatus.InProgress,
                         RunTimeTicks = (item.EndDate - item.StartDate).Ticks
                     }
                 },

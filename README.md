@@ -4,6 +4,8 @@ Emby "LiveTV" plugin for MythTV with changes for Emby 4.0+.
 
 2019-01-25: Seems OK for viewing recordings, LiveTV seems not to work though, will look at that when I get chance.
 
+2020-10-19: Looked again out of curiosity if it still works, corrected to work in Emby 4.5+, fixed config page.
+
 To install, build and place in the Emby server plugins folder.
 
 Binary and source for older Emby versions (pre 4.0) may be downloaded from https://github.com/ta264/Emby.MythTv

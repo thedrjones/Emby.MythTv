@@ -10,7 +10,7 @@ namespace Emby.MythTv.Protocol
         public bool IsPlaying { get; private set; }
         public bool IsLiveRecording { get; private set; }
 
-        public ProtoRecorder(int num, string server, int port, ILogger logger) : base(server, port, logger)
+        public ProtoRecorder(int num, string server, int port, string pin, ILogger logger) : base(server, port, pin, logger)
         {
             Num = num;
             IsPlaying = false;
